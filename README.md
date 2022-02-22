@@ -4,7 +4,11 @@
 # CapSequence, MileSequence
 
 CapSequence is a sequence of opportunities for making payment eg.(rewards). It gets started  every period of time.
- 
+
+
+CapSequence have a bunch of different properties, and here are some ones:
+
+
 ## Features
 - It is useful library to contain multiple hierarchies timestamp. 
 - It adds a list of the time.

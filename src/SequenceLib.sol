@@ -24,6 +24,8 @@ library SetMileStone {
         uint64 startTime;
         uint64 endTime;
         uint64 period;
+        uint24 tranche;
+        uint24 extendTimeSequence;
     }
     
      /**
@@ -40,7 +42,22 @@ library SetMileStone {
             return self.period;
     }
     
-      /**
+
+    /**
+     * @dev Sets the tranche of days 
+     */
+    function setTranche(Data storage self, uint8 tranche) internal {
+            self.tranche = tranche;
+    }
+
+    /**
+     * @dev Get the tranche of days 
+     */
+    function getTranche(Data storage self) internal view returns (uint64) {
+            return self.tranche;
+    }
+
+    /**
      * @dev Init MileStone
      * 
      * @notice this should be run at the smart contract constructor and also after reset the milestone
@@ -50,11 +67,13 @@ library SetMileStone {
     {
         require(self.period > 0 && self.startTime < block.timestamp);
         uint64 currentTime = uint64(block.timestamp);
-        uint64 reTimer ;
+        uint64 reTimer =0 ;
         uint64 period = self.period;
+        uint24 tranche = self.tranche * 1 days;
+
         self.startTime = currentTime + reTimer;
-        self.endTime = ((30 days  * self.period) + currentTime) ;
-        reTimer = (30 days * period) ;
+        self.endTime = ((tranche  * period) + currentTime) ;
+        reTimer = (tranche  * period) ;
 
     }
     
@@ -68,13 +87,12 @@ library SetMileStone {
          {
         require(isExtandable(self), "Not_Extandable");
         uint64 currentTime = self.endTime;
-        uint64 reTimer ;
+        uint24 tranche = self.tranche;
+        uint64 reTimer = 0 ;
         self.startTime = currentTime + reTimer;
-        self.endTime = ((30 days * self.period) + currentTime + passTimer(self)) ;
-        reTimer = (30 days  * self.period) ;
+        self.endTime = ((tranche * self.period) + currentTime + passTimer(self)) ;
+        reTimer = (tranche  * self.period) ;
     }
-    
-    
     
     /**
      * @dev Pass the missing time at the end of the MileStone if there was no extended  
@@ -103,9 +121,10 @@ library SetMileStone {
         require(isExtandable(self), "UnExtandable");
         uint64 currentTime = self.endTime;
         uint64 reTimer = 0;
+        uint24 tranche = self.tranche * 1 days;
         self.startTime = currentTime + reTimer;
-        self.endTime = ((30 days * self.period) + currentTime) ;
-        reTimer = (30 days  * self.period) ;
+        self.endTime = ((tranche * self.period) + currentTime) ;
+        reTimer = (tranche  * self.period) ;
     }
     
     /**
@@ -177,7 +196,8 @@ library SetMileStone {
     function isExtandable(Data storage self) internal 
     view returns (bool) {
             require(isMileStarted(self) == true, "No_Start");
+           // uint24 extendTimeSequence= self.extendTimeSequence * 1 days
             return self.endTime - 15 days <= block.timestamp;
-    }
+        }
 
 }

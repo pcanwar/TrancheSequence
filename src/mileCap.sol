@@ -15,11 +15,11 @@ import "./openzzeppelin/Counters.sol";
 
 // to do: retrun limit per swop and return max by claim
 
-contract place  {
+contract example  {
     
     
    using Counters for Counters.Counter;
-    Counters.Counter private _timestampId;
+Counters.Counter private _timestampId;
 
     using SetMileStone for SetMileStone.Data; 
     SetMileStone.Data private knownTimer;

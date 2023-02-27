@@ -1,22 +1,20 @@
 # CapSequence
 
 
-# CapSequence, MileSequence
+# Tranche Sequence
 
-CapSequence is a sequence of opportunities for making payment eg.(rewards). It gets started every period of time.
+Tranche Sequence is a sequence of opportunities for making payment. It gets started every period of time.
 
 
 ## Abstract:
 
-The following standard is extending ERC20, ERC721, and etc and allows for multi-stage schemes that aim to provide a fair and transparent approach to on-chain time management. The protocol utilizes smart contracts to define time milestones and a sequence of opportunities for stakeholders to evaluate and also decide on the next steps.
+The following standard is extending ERC20, ERC721, and etc and allows for multi-stage schemes that aim to provide a fair and transparent approach to on-chain time management. The standard utilizes additional functions to define time milestones and a sequence of opportunities for stakeholders to evaluate and also decide on the next steps.
 
 ## Motivation:
 
-The motivation behind this is to address the challenges of managing multi-stage projects and to provide a fair and transparent approach to smart contract management. Effective smart contract management requires a structured approach that enables stakeholders to progress and decide on the next steps. The standard can be applied to various use cases, such as salary negotiations, project funding, or resource allocation. The protocol is designed to be promoting trust and collaboration among stakeholders. The protocol's flexibility and transparency can result in a fairer and more effective decision-making process for all parties involved.
+The motivation behind this is to address the challenges of managing multi-stage use cases or projects on utility tokens or NFTs and to provide a fair and transparent approach on-chain time management. Effective smart contract management requires a structured approach that enables stakeholders to progress and decide on the next steps. The standard can be applied to various use cases, such as salary negotiations, project funding, sequence of funcding or resource allocation. The standard is designed to be promoting trust and collaboration among stakeholders. The protocol's flexibility and transparency can result in a fairer and more effective decision-making process for all parties involved.
 
-
-CapSequence have a bunch of different properties, and here are some ones:
-
+Tranche Sequence have a bunch of different properties, and here are some ones:
 
 ## Features
 - It is useful library to contain multiple hierarchies timestamp. 
@@ -26,6 +24,12 @@ CapSequence have a bunch of different properties, and here are some ones:
 
 ## Tech
 - InitMileStone function should be run in the smart contract constructor and also after reset the milestone
+
+
+## Specification
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119 and RFC 8174.
+
 
 ```sh
     function initMileStone(Data storage self)
@@ -72,6 +76,10 @@ CapSequence have a bunch of different properties, and here are some ones:
     
 ```
 
+## Rationale
+
+
+The composable extension is OPTIONAL for this standard.
 
 ## License
 MIT

@@ -6,11 +6,11 @@
 CapSequence is a sequence of opportunities for making payment eg.(rewards). It gets started every period of time.
 
 
-#Abstract:
+## Abstract:
 
 The following standard allows for multi-stage schemes that aim to provide a fair and transparent approach to project management. The protocol utilizes smart contracts to define project milestones and a sequence of opportunities for stakeholders to evaluate and also decide on the next steps.
 
-Motivation:
+## Motivation:
 
 The motivation behind this is to address the challenges of managing multi-stage projects and to provide a fair and transparent approach to smart contract management. Effective smart contract management requires a structured approach that enables stakeholders to progress and decide on the next steps. The standard can be applied to various use cases, such as salary negotiations, project funding, or resource allocation. The protocol is designed to be promoting trust and collaboration among stakeholders. The protocol's flexibility and transparency can result in a fairer and more effective decision-making process for all parties involved.
 

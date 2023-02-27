@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
-import "@openzeppelin/contracts/utils/Counters.sol";
 
+import "./openzzeppelin/Counters.sol";
 
 /**
- * @title SwopXPlace
+ * @title Example 
  * @author Anwar (@pcanw)
  * 
- * @dev collact any matches occurs bewteen two users 
+ * @dev 
  *
 */
 

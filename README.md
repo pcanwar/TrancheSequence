@@ -8,7 +8,7 @@ CapSequence is a sequence of opportunities for making payment eg.(rewards). It g
 
 ## Abstract:
 
-The following standard allows for multi-stage schemes that aim to provide a fair and transparent approach to project management. The protocol utilizes smart contracts to define project milestones and a sequence of opportunities for stakeholders to evaluate and also decide on the next steps.
+The following standard is extending ERC20, ERC721, and etc and allows for multi-stage schemes that aim to provide a fair and transparent approach to on-chain time management. The protocol utilizes smart contracts to define time milestones and a sequence of opportunities for stakeholders to evaluate and also decide on the next steps.
 
 ## Motivation:
 

@@ -79,6 +79,12 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 ## Rationale
 
 
+Backwards Compatibility
+No backward compatibility issues found.
+
+Test Cases
+
+
 The composable extension is OPTIONAL for this standard.
 
 ## License

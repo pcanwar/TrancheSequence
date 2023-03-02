@@ -1,16 +1,16 @@
 # Tranche Sequence
 
-Tranche Sequence is a sequence of opportunities for making payment. It gets started every period of time.
+A tranche sequence refers to a series of payment opportunities that occur at specified time intervals.
 
 ## Abstract:
 
-The following library is extending ERC20, ERC721, and etc and allows for multi-stage schemes that aim to provide a transparent approach to on-chain time management. The library utilizes additional functions to define time milestones and a sequence of opportunities for stakeholders to evaluate and also decide on the next steps.
+This concept is extended through a library that builds on ERC20, ERC721, and other protocols, offering a transparent and structured approach to on-chain time management. With the help of additional functions, the library enables stakeholders to define time milestones and a sequence of opportunities to evaluate and decide on the next steps.
 
 ## Motivation:
 
-The motivation behind this is to address the challenges of managing multi-stage use cases or projects on utility tokens or NFTs and to provide a fair and transparent approach on-chain time management. Effective smart contract management requires a structured approach that enables stakeholders to progress and decide on the next steps. The library can be applied to various use cases, such as salary negotiations, project funding, sequence of funcding or resource allocation. The library is designed to be promoting trust and collaboration among stakeholders. The protocol's flexibility and transparency can result in a fairer and more effective decision-making process for all parties involved.
+The motivation behind this library is to overcome the challenges of managing multi-stage projects or use cases on utility tokens or NFTs while providing a fair and transparent approach to on-chain time management. This structured approach facilitates effective smart contract management and enables stakeholders to progress and make informed decisions. The library can be applied to various use cases, such as salary negotiations, project funding, or resource allocation, promoting trust and collaboration among stakeholders. The protocol's flexibility and transparency can result in a fairer and more effective decision-making process for all parties involved.
 
-Tranche Sequence have a bunch of different properties, and here are some ones:
+The following properties make tranche sequences an effective tool for managing multi-stage use cases and projects on utility tokens or NFTs in a structured and transparent manner:
 
 ## Features
 - It is useful library to contain multiple hierarchies timestamp. 
@@ -18,8 +18,8 @@ Tranche Sequence have a bunch of different properties, and here are some ones:
 - Increase sequence based on the exsiting sequence in the contract.
 - Time can be increased on time if it is needed in the smart contract
 - Admin can only increased the time
-- There is a rest time on sequence.
-- There is no decresed time function 
+- There is a rest time on sequence to provide flexibility for stakeholders.
+- There is no decresed time function, meaning once a timestamp is added, it cannot be removed or modified
 
 ## Tech
 - InitMileStone function should be run in the smart contract constructor and also after reset the milestone

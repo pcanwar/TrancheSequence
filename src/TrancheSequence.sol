@@ -108,7 +108,7 @@ library TrancheSequence {
 
     /**
      * @dev Get the remaining time until the next milestone:
-     * to get the remaining time in the current milestone.
+     * @return remaining time in the current milestone.
      * which can be useful for displaying the time left before the milestone expires.
      */
     function getRemainingTime(
@@ -138,7 +138,7 @@ library TrancheSequence {
     }
 
     /**
-     * @dev Get the number of missed milestones.
+     @dev Get the number of missed milestones.
      @return the number of missed milestones,
      * which can be helpful for tracking purposes.
      */
@@ -299,7 +299,7 @@ library TrancheSequence {
     }
 
     /**
-     * @dev returns the number of completed milestones based on the current state of the library.
+     * @return the number of completed milestones based on the current state of the library.
      */
     function getCompletedMilestonesCount(
         Data storage self
@@ -334,9 +334,7 @@ library TrancheSequence {
     ////////////////////////
 
     /**
-     * @dev List all missing timestamps since the last completed milestone
-     * notes that the start time of each missed milestone is stored in even indices (0, 2, 4, ...),
-     * and the end time is stored in odd indices (1, 3, 5, ...).
+     * @return List all missing timestamps since the last completed milestone
      */
     function listMissingTimestamps(
         Data storage self
@@ -374,7 +372,7 @@ library TrancheSequence {
     }
 
     /**
-     * @dev Returns MileStone's start timer and end timer.
+     * @return MileStone's start timer and end timer.
      */
     function currentMile(
         Data storage self
@@ -383,7 +381,7 @@ library TrancheSequence {
     }
 
     /**
-     * @dev Returns the current start timer.
+     * @return the current start timer.
      */
 
     function currentStartMile(
@@ -393,14 +391,14 @@ library TrancheSequence {
     }
 
     /**
-     * @dev Returns the current end timer.
+     * @return the current end timer.
      */
     function currentEndtMile(Data storage self) internal view returns (uint64) {
         return (self.endTime);
     }
 
     /**
-     * @dev Returns a boolean if current time is in the sequence
+     * @return a boolean if current time is in the sequence
      */
     function isCurrentMilestone(
         Data storage self
@@ -410,7 +408,7 @@ library TrancheSequence {
     }
 
     /**
-     * @dev Returns a boolean if mile sequence is started
+     * @return a boolean if mile sequence is started
      */
     function isMilestoneStarted(
         Data storage self
@@ -419,7 +417,7 @@ library TrancheSequence {
     }
 
     /**
-     * @dev Returns a boolean if one slice of a sequence is ended
+     * @return a boolean if one slice of a sequence is ended
      */
     function isMilestoneExpired(
         Data storage self
@@ -428,7 +426,7 @@ library TrancheSequence {
     }
 
     /**
-     * @dev Returns a boolean if a time sequence can be extanded
+     * @return a boolean if a time sequence can be extanded
      */
     function isExtandable(Data storage self) internal view returns (bool) {
         if (!isMilestoneStarted(self)) {

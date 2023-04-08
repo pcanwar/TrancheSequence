@@ -14,279 +14,170 @@ import "./TrancheSequence.sol";
 
 // to do: retrun limit per swop and return max by claim
 
-contract example {
-    using Counters for Counters.Counter;
-    Counters.Counter private _timestampId;
+contract TrancheManager {
+    uint public limitations;
 
+    struct rewardMileStone {
+        uint tokens;
+        uint endTime;
+        bool isRewarded;
+    }
+
+    mapping(address => mapping(uint => rewardMileStone))
+        internal addressToRewardMile;
     using TrancheSequence for TrancheSequence.Data;
-    TrancheSequence.Data private knownTimer;
-
-    // uint64[][] private timerMileStone;
-    // uint64[] private startTimeStone;
-
-    mapping(uint256 => uint64[2]) private milestone;
-
-    event NewTimePeriod(uint64 indexed xtime, uint64 indexed ytime);
+    TrancheSequence.Data public trancheData;
 
     constructor(
-        uint64 _timePeriod,
-        uint24 _timeTranche,
-        uint24 _extendTimeSequence
+        uint64 tranchePeriod,
+        uint64 extendTimeSequence,
+        TrancheSequence.TimeUnit timeUnit
     ) {
-        knownTimer.setPeriod(_timePeriod);
-        knownTimer.setTranche(_timeTranche);
-        knownTimer.setExtendTimeSequence(_extendTimeSequence);
-        knownTimer.initMileStone();
-
-        (uint64 _xtime, uint64 ytime) = knownTimer.currentMile();
-        setMilestone(_xtime, ytime);
+        require(tranchePeriod > 0 && extendTimeSequence > 0, "ZERO");
+        trancheData.tranche = tranchePeriod;
+        trancheData.extendTimeSequence = extendTimeSequence;
+        trancheData.initMileStone(timeUnit);
     }
 
-    // set time period using the library
-    function setTimePeriod(uint64 _timePeriod) public {
-        knownTimer.setPeriod(_timePeriod);
+    function initialize(uint _limit) public {
+        require(_limit > 0, "ZERO");
+        limitations = _limit;
     }
 
-    function mileStoneIndexOf(uint256 i) public view returns (uint64, uint64) {
-        return (milestone[i][0], milestone[i][1]);
+    function updateTranchePeriod(uint24 newTranchePeriod) public {
+        trancheData.updateTranchePeriod(newTranchePeriod);
     }
 
-    // /**
-    //  * @dev Returns all times
-    //  */
-    // function fetchMileStone() public view returns (uint64[][] memory) {
-    //     return timerMileStone;
-    // }
+    function updateExtendSequence(
+        uint64 newExtendSequence,
+        TrancheSequence.TimeUnit timeUnit
+    ) public {
+        trancheData.updateExtendSequence(newExtendSequence, timeUnit);
+    }
 
-    /**
-     * @dev Set a MileStone
-     */
-    function setMilestone(uint64 _xtime, uint64 _ytime) private {
-        // startTimeStone.push(_ytime);
-        _timestampId.increment();
-        uint256 counter = _timestampId.current();
-        milestone[counter][0] = _xtime;
-        milestone[counter][1] = _ytime;
-        // timerMileStone.push([_xtime, _ytime]);
-        emit NewTimePeriod(_xtime, _ytime);
+    function getTrancheDays() public view returns (uint64) {
+        return trancheData.getTrancheDays();
+    }
+
+    function getExtendTimeSequence() public view returns (uint64) {
+        return trancheData.getExtendTimeSequence();
+    }
+
+    function getRemainingTime() public view returns (uint64) {
+        return trancheData.getRemainingTime();
+    }
+
+    function getNextMilestoneTimestamp() public view returns (uint64) {
+        return trancheData.getNextMilestoneTimestamp();
+    }
+
+    function getMissedMilestonesCount() public view returns (uint64) {
+        return trancheData.getMissedMilestonesCount();
+    }
+
+    function getTotalMilestones() public view returns (uint64) {
+        return trancheData.getTotalMilestones();
+    }
+
+    function getCompletedMilestonesCount() public view returns (uint64) {
+        return trancheData.getCompletedMilestonesCount();
+    }
+
+    function getMilestoneAtIndex(
+        uint64 index
+    ) public view returns (uint64, uint64) {
+        return trancheData.getMilestoneAtIndex(index);
+    }
+
+    function initMileStoneWithCustomStartTime(
+        uint64 customStartTime,
+        TrancheSequence.TimeUnit timeUnit
+    ) public {
+        trancheData.initMileStoneWithCustomStartTime(customStartTime, timeUnit);
     }
 
     /**
      * @dev Returns false if the time is not extandable otherwise increase the MileStone
      */
-    function extandMileStone() private returns (bool) {
-        // if (isExtandable()) {
-        (uint64 _xtime, uint64 ytime) = knownTimer.currentMile();
-        if (knownTimer.isExtandable()) {
-            // startTimeStone.push(ytime);
-            knownTimer.increaseMileStone();
-            (_xtime, ytime) = knownTimer.currentMile();
-            setMilestone(_xtime, ytime);
-            emit NewTimePeriod(_xtime, ytime);
+    function increaseMileStone() public returns (bool) {
+        if (trancheData.isExtandable()) {
+            trancheData.increaseMileStone();
             return true;
         }
         return false;
     }
 
-    /**
-     * @dev Returns the current MileStone
-     */
-    function currentMileStone() public view returns (uint64 _x, uint64 _y) {
-        return knownTimer.currentMile();
+    function increaseGapMileStone() public {
+        trancheData.increaseGapMileStone();
+    }
+
+    function forceIncreaseMilestone() public {
+        trancheData.forceIncreaseMilestone();
+    }
+
+    function renewMileStone() public {
+        trancheData.renewMileStone();
+    }
+
+    function listMissingTimestamps() public view returns (uint64[] memory) {
+        return trancheData.listMissingTimestamps();
     }
 
     /**
      * @dev reset all time
      */
     function resetMileStone() public {
-        // require(hasAdminRole()== true);
-        knownTimer.resetMileStone();
+        trancheData.resetMileStone();
     }
+
+    /**
+     * @dev Returns the current MileStone
+     */
+    function currentMile() public view returns (uint64, uint64) {
+        return trancheData.currentMile();
+    }
+
+    function currentStartMile() public view returns (uint64) {
+        return trancheData.currentStartMile();
+    }
+
+    function currentEndtMile() public view returns (uint64) {
+        return trancheData.currentEndtMile();
+    }
+
+    function isCurrentMilestone() public view returns (bool) {
+        return trancheData.isCurrentMilestone();
+    }
+
+    function isMilestoneStarted() public view returns (bool) {
+        return trancheData.isMilestoneStarted();
+    }
+
+    // function isMilestoneExpired() public view returns (bool) {
+    //     return
 
     /**
      * dev: extend the milestone
      */
-    function extend_() private {
-        bool _x = extandMileStone();
+    function extend_() public {
+        bool _x = increaseMileStone();
         if (_x == true) {
-            extandMileStone();
+            increaseMileStone();
         }
     }
 
-    // function maintainClaimTime() private view returns (uint64) {
-    //     uint256 counter = _timestampId.current();
-    //     return startTimeStone[counter - 1];
-    // }
+    function isExtanded() public view returns (bool) {
+        return trancheData.isExtandable();
+    }
 
-    /**
-     *  From the backend claim rewards check if the user has reward-roll and
-     * also check how many nft swaps they did
-     *  There is requirement, if the reward-balance is greater than 10,
-     * only withdraw 10; however, if it is less than 10, withdraw everything.
-     */
+    // swap nfts, there is a fee on each swap but once the nft-swap occur, no need to pay a new fees.
+    function swapTokenToToken() public {
+        extend_();
+
+        uint64 _start = trancheData.currentStartMile();
+
+        if (addressToRewardMile[msg.sender][_start].tokens < limitations) {
+            addressToRewardMile[msg.sender][_start].tokens++;
+        }
+    }
 }
-
-/**
- * @title MileStone, CapSequence, or MileSequence
- * @author Anwar (@pcanw)
- *
- * @dev Mile sequence is a sequence of opportunities for making payment eg.(rewards). It gets collected every period of time.
- * Every time period is like a slice.
- *
- *
- * Readme
- * It is useful library to contain multiple hierarchies timestamp.
- *
- * TODO - add a list of the time in the library
- *      - increase/ control time by admin if it is needed in the smart contract
- */
-
-// library SetMileStone {
-//     struct Data {
-//         uint64 startTime;
-//         uint64 endTime;
-//         uint64 period;
-//     }
-
-//     /**
-//      * @dev Sets the period of days
-//      */
-//     function setPeriod(Data storage self, uint64 period) internal {
-//         self.period = period;
-//     }
-
-//     /**
-//      * @dev Get the period of days
-//      */
-//     function getPeriod(Data storage self) internal view returns (uint64) {
-//         return self.period;
-//     }
-
-//     /**
-//      * @dev Init MileStone
-//      *
-//      * @notice this should be run at the smart contract constructor and also after reset the milestone
-//      */
-//     function initMileStone(Data storage self) internal {
-//         require(self.period > 0 && self.startTime < block.timestamp);
-//         uint64 currentTime = uint64(block.timestamp);
-//         uint64 reTimer;
-//         uint64 period = self.period;
-//         self.startTime = currentTime + reTimer;
-//         self.endTime = ((30 days * self.period) + currentTime);
-//         reTimer = (30 days * period);
-//     }
-
-//     /**
-//      * @dev Increase MileStone based on the exsiting MileStone in the contract.
-//      */
-
-//     function increaseMileStone(Data storage self) internal {
-//         require(isExtandable(self), "Not_Extandable");
-//         uint64 currentTime = self.endTime;
-//         uint64 reTimer;
-//         self.startTime = currentTime + reTimer;
-//         self.endTime = ((30 days * self.period) +
-//             currentTime +
-//             passTimer(self));
-//         reTimer = (30 days * self.period);
-//     }
-
-//     /**
-//      * @dev Pass the missing time at the end of the MileStone if there was no extended
-//      * it works only if there is no extanded occur or missing to increase the milestone..
-//      *
-//      */
-//     function passTimer(Data storage self) private view returns (uint64) {
-//         uint64 timestamp = uint64(block.timestamp);
-//         if (self.endTime < timestamp) {
-//             uint64 _b = timestamp - self.endTime;
-//             return _b;
-//         } else {
-//             return 0;
-//         }
-//     }
-
-//     /**
-//      * @dev renew the mile timestamp sequence.
-//      * unused since we continue the milestone of the project.
-//      */
-//     function renewMileStone(Data storage self) internal {
-//         require(isExtandable(self), "UnExtandable");
-//         uint64 currentTime = self.endTime;
-//         uint64 reTimer = 0;
-//         self.startTime = currentTime + reTimer;
-//         self.endTime = ((30 days * self.period) + currentTime);
-//         reTimer = (30 days * self.period);
-//     }
-
-//     /**
-//      * @dev reset mile sequence .
-//      *
-//      */
-//     function resetMileStone(Data storage self) internal {
-//         self.endTime = 0;
-//         self.startTime = 0;
-//         self.period = 0;
-//     }
-
-//     /**
-//      * @dev Returns MileStone's start timer and end timer.
-//      */
-//     function currentMile(Data storage self)
-//         internal
-//         view
-//         returns (uint64, uint64)
-//     {
-//         return (self.startTime, self.endTime);
-//     }
-
-//     /**
-//      * @dev Returns the current start timer.
-//      */
-
-//     function currentStartMile(Data storage self)
-//         internal
-//         view
-//         returns (uint64)
-//     {
-//         return (self.startTime);
-//     }
-
-//     /**
-//      * @dev Returns the current end timer.
-//      */
-//     function currentEndtMile(Data storage self) internal view returns (uint64) {
-//         return (self.endTime);
-//     }
-
-//     /**
-//      * @dev Returns a boolean if current time is in the sequence
-//      */
-//     function isCurrentMile(Data storage self) internal view returns (bool) {
-//         return
-//             self.startTime < block.timestamp && self.endTime > block.timestamp;
-//     }
-
-//     /**
-//      * @dev Returns a boolean if mile sequence is started
-//      */
-//     function isMileStarted(Data storage self) internal view returns (bool) {
-//         return self.startTime > 0;
-//     }
-
-//     /**
-//      * @dev Returns a boolean if one slice of a sequence is ended
-//      */
-//     function isMileExpired(Data storage self) internal view returns (bool) {
-//         return self.endTime <= block.timestamp;
-//     }
-
-//     /**
-//      * @dev Returns a boolean if a time sequence can be extanded
-//      */
-//     function isExtandable(Data storage self) internal view returns (bool) {
-//         require(isMileStarted(self) == true, "No_Start");
-//         return self.endTime - 15 days <= block.timestamp;
-//     }
-// }

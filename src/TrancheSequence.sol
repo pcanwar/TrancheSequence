@@ -6,21 +6,18 @@ pragma solidity ^0.8.0;
  * @author Anwar (@pcanw)
  * @custom:contact ipcanw@gmail.com
  *
- * @dev The Mile Sequence is a sequence of opportunities for making payments (e.g., rewards)
+ * @dev Library for managing time-based tranches.
  * that gets collected every period of time.
- * Each time period is like a slice.
  *
- * Readme
  * This is a useful library that can contain multiple hierarchies of timestamps.
  *
- * TODO:
- *  - add a list of the time in the library
- * - Allow admin to increase/control time if needed in the smart contract.
  */
 
 library TrancheSequence {
-    error NotExtandable();
+    // Define a custom error for when an extension is not allowed
+    error NotExtendable();
 
+    // Define the different time units
     enum TimeUnit {
         Minutes,
         Hours,
@@ -28,30 +25,37 @@ library TrancheSequence {
         Weeks
     }
 
-    function timeUnitMileStone(
-        Data storage self,
-        TimeUnit timeUnit
-    ) internal view returns (uint64) {
-        uint64 tranche;
-        if (timeUnit == TimeUnit.Minutes) {
-            tranche = self.tranche * 1 minutes;
-        } else if (timeUnit == TimeUnit.Hours) {
-            tranche = self.tranche * 1 hours;
-        } else if (timeUnit == TimeUnit.Days) {
-            tranche = self.tranche * 1 days;
-        } else if (timeUnit == TimeUnit.Weeks) {
-            tranche = self.tranche * 1 weeks;
-        } else {
-            revert("Invalid time unit provided.");
-        }
-        return tranche;
-    }
-
+    // Structure for the library
     struct Data {
         uint64 startTime;
         uint64 endTime;
         uint64 tranche;
-        uint24 extendTimeSequence;
+        uint64 extendTimeSequence;
+    }
+
+    ////////////////////////
+    // Utility functions
+    ////////////////////////
+
+    /**
+     * @dev Convert time units to seconds.
+     */
+    function convertTimeUnitToSeconds(
+        TimeUnit timeUnit
+    ) private pure returns (uint64) {
+        uint64 timeUint = 0;
+        if (timeUnit == TimeUnit.Minutes) {
+            timeUint = 1 minutes;
+        } else if (timeUnit == TimeUnit.Hours) {
+            timeUint = 1 hours;
+        } else if (timeUnit == TimeUnit.Days) {
+            timeUint = 1 days;
+        } else if (timeUnit == TimeUnit.Weeks) {
+            timeUint = 1 weeks;
+        } else {
+            revert("Invalid TimeUnit provided.");
+        }
+        return timeUint;
     }
 
     ////////////////////////
@@ -59,25 +63,27 @@ library TrancheSequence {
     ////////////////////////
 
     /**
-     * @dev Update Tranche Period: Set a function to update the tranche period,
+     * @dev Update Tranche Period: to update the tranche period,
      * in case there's a need to change the tranche duration after the library has been deployed.
      */
     function updateTranchePeriod(
         Data storage self,
-        uint24 newTranche
+        uint24 newTranchePeriod
     ) internal {
-        self.tranche = newTranche;
+        self.tranche = newTranchePeriod;
     }
 
     /**
-     * @dev Update Extend Time Sequence: Set a function to update the extend time sequence,
+     * @dev Update Extend Time Sequence: to update the extend time sequence,
      * allowing the contract administrator to change the time sequence after deployment.
      */
     function updateExtendSequence(
         Data storage self,
-        uint24 extendTimeSequence
+        uint64 newExtendSequence,
+        TimeUnit timeUnit
     ) internal {
-        self.extendTimeSequence = extendTimeSequence;
+        uint64 time = convertTimeUnitToSeconds(timeUnit);
+        self.extendTimeSequence = newExtendSequence * time;
     }
 
     ////////////////////////
@@ -92,7 +98,7 @@ library TrancheSequence {
     }
 
     /**
-     * @dev Get the tranche of days
+     * @dev Get the extend time sequence.
      */
     function getExtendTimeSequence(
         Data storage self
@@ -101,26 +107,28 @@ library TrancheSequence {
     }
 
     /**
-     * @dev Get Next Milestone Timestamp: A function to return the timestamp for the next milestone,
-     * which can be helpful for displaying upcoming milestones.
+     * @dev Get the remaining time until the next milestone:
+     * to get the remaining time in the current milestone.
+     * which can be useful for displaying the time left before the milestone expires.
      */
     function getRemainingTime(
         Data storage self
     ) internal view returns (uint64) {
-        if (isMileExpired(self)) {
+        if (isMilestoneExpired(self)) {
             return 0;
         }
         return self.endTime - uint64(block.timestamp);
     }
 
     /**
-     * @dev Get Remaining Time: to get the remaining time in the current milestone,
-     * which can be useful for displaying the time left before the milestone expires.
+     * @dev Get Next Milestone Timestamp:
+     * @return the timestamp for the next milestone,
+     * which can be helpful for displaying upcoming milestones.
      */
     function getNextMilestoneTimestamp(
         Data storage self
     ) internal view returns (uint64) {
-        if (isMileExpired(self)) {
+        if (isMilestoneExpired(self)) {
             uint64 currentTime = uint64(block.timestamp);
             uint64 timeSinceLastMilestone = currentTime - self.endTime;
             uint64 missedMilestones = timeSinceLastMilestone / self.tranche;
@@ -130,13 +138,14 @@ library TrancheSequence {
     }
 
     /**
-     * @dev Get Missed Milestones Count: A function to return the number of missed milestones,
+     * @dev Get the number of missed milestones.
+     @return the number of missed milestones,
      * which can be helpful for tracking purposes.
      */
     function getMissedMilestonesCount(
         Data storage self
     ) internal view returns (uint64) {
-        if (!isMileExpired(self)) {
+        if (!isMilestoneExpired(self)) {
             return 0;
         }
         uint64 currentTime = uint64(block.timestamp);
@@ -144,9 +153,9 @@ library TrancheSequence {
         return timeSinceLastMilestone / self.tranche;
     }
 
-    ////////////////////////
+    ////////////////////////////////////////////////
     // Initialization and modification functions
-    ////////////////////////
+    ////////////////////////////////////////////////
 
     /**
      * @dev Initialize with Custom Start Time: A function to initialize the milestone with a custom start time instead of the current block timestamp.
@@ -157,10 +166,10 @@ library TrancheSequence {
         uint64 customStartTime,
         TimeUnit timeUnit
     ) internal {
-        require(self.tranche > 0 && customStartTime < block.timestamp);
-        uint64 tranche = timeUnitMileStone(self, timeUnit);
+        require(self.tranche > 0 && customStartTime <= block.timestamp);
+        uint64 tranche = self.tranche * convertTimeUnitToSeconds(timeUnit);
         self.startTime = customStartTime;
-        self.endTime = ((tranche) + customStartTime);
+        self.endTime = tranche + customStartTime;
         self.tranche = tranche;
     }
 
@@ -169,10 +178,10 @@ library TrancheSequence {
      *
      * @notice this should be run at the smart contract constructor and also after reset the milestone
      */
-    function initMileStone(Data storage self) internal {
-        require(self.tranche > 0 && self.startTime < block.timestamp);
+    function initMileStone(Data storage self, TimeUnit timeUnit) internal {
+        require(self.tranche > 0 && self.startTime <= block.timestamp);
         uint64 currentTime = uint64(block.timestamp);
-        uint64 tranche = self.tranche * 1 days;
+        uint64 tranche = self.tranche * convertTimeUnitToSeconds(timeUnit);
         self.startTime = currentTime;
         self.endTime = currentTime + tranche;
         self.tranche = tranche;
@@ -183,10 +192,12 @@ library TrancheSequence {
      */
 
     function increaseMileStone(Data storage self) internal {
-        if (!isExtandable(self)) NotExtandable;
+        if (!isExtandable(self)) revert NotExtendable();
         uint64 currentTime = self.endTime;
         uint64 newStartTime = currentTime;
-        uint64 newEndTime = self.tranche + currentTime + passTimer(self);
+        uint64 newEndTime = self.tranche +
+            currentTime +
+            getElapsedExcessTime(self);
         self.startTime = newStartTime;
         self.endTime = newEndTime;
     }
@@ -232,11 +243,83 @@ library TrancheSequence {
     }
 
     /**
-     * @dev Pass the missing time at the end of the MileStone if there was no extended
+     * @dev renew the mile timestamp sequence.
+     * unused since we continue the milestone of the project.
+     */
+    function renewMileStone(Data storage self) internal {
+        if (!isExtandable(self)) revert NotExtendable();
+        uint64 currentTime = self.endTime;
+        uint64 tranche = self.tranche;
+        self.startTime = currentTime;
+        self.endTime = tranche + currentTime;
+    }
+
+    ////////////////////////
+    // Query functions
+    ////////////////////////
+
+    /**
+     * @dev allow you to query the milestone info for any specific index.
+     */
+    function getMilestoneAtIndex(
+        Data storage self,
+        uint64 index
+    ) internal view returns (uint64, uint64) {
+        uint64 startTime = self.startTime + (index * self.tranche);
+        uint64 endTime = startTime + self.tranche;
+        return (startTime, endTime);
+    }
+
+    function getMilestoneAtIndex(
+        Data storage self,
+        uint64 index,
+        bool directionForward
+    ) internal view returns (uint64, uint64) {
+        uint64 startTime;
+        if (directionForward) {
+            startTime = self.startTime + (index * self.tranche);
+        } else {
+            startTime = self.endTime - ((index + 1) * self.tranche);
+        }
+        uint64 endTime = startTime + self.tranche;
+        return (startTime, endTime);
+    }
+
+    /**
+     * @dev
+     * @return the total number of milestones, both completed and pending,
+     * based on the current state of the library.
+     */
+    function getTotalMilestones(
+        Data storage self
+    ) internal view returns (uint64) {
+        uint64 currentTime = uint64(block.timestamp);
+        uint64 elapsedTranches = (currentTime - self.startTime) / self.tranche;
+        return elapsedTranches + 1;
+    }
+
+    /**
+     * @dev returns the number of completed milestones based on the current state of the library.
+     */
+    function getCompletedMilestonesCount(
+        Data storage self
+    ) internal view returns (uint64) {
+        uint64 currentTime = uint64(block.timestamp);
+        if (currentTime <= self.startTime) {
+            return 0;
+        }
+        uint64 elapsedTranches = (currentTime - self.startTime) / self.tranche;
+        return elapsedTranches;
+    }
+
+    /**
+     * @dev get the missing time at the end of the MileStone if there was no extended
      * it works only if there is no extanded occur or missing to increase the milestone..
      *
      */
-    function passTimer(Data storage self) private view returns (uint64) {
+    function getElapsedExcessTime(
+        Data storage self
+    ) private view returns (uint64) {
         uint64 timestamp = uint64(block.timestamp);
         if (self.endTime < timestamp) {
             uint64 _b = timestamp - self.endTime;
@@ -246,16 +329,38 @@ library TrancheSequence {
         }
     }
 
+    ////////////////////////
+    // Helper functions
+    ////////////////////////
+
     /**
-     * @dev renew the mile timestamp sequence.
-     * unused since we continue the milestone of the project.
+     * @dev List all missing timestamps since the last completed milestone
+     * notes that the start time of each missed milestone is stored in even indices (0, 2, 4, ...),
+     * and the end time is stored in odd indices (1, 3, 5, ...).
      */
-    function renewMileStone(Data storage self) internal {
-        if (!isExtandable(self)) NotExtandable;
-        uint64 currentTime = self.endTime;
-        uint64 tranche = self.tranche * 1 days;
-        self.startTime = currentTime;
-        self.endTime = tranche + currentTime;
+    function listMissingTimestamps(
+        Data storage self
+    ) internal view returns (uint64[] memory) {
+        if (!isMilestoneExpired(self)) {
+            return new uint64[](0);
+        }
+
+        uint64 currentTime = uint64(block.timestamp);
+        uint64 timeSinceLastMilestone = currentTime - self.endTime;
+        uint64 missedMilestones = timeSinceLastMilestone / self.tranche;
+
+        uint64[] memory missingTimestamps = new uint64[](
+            (missedMilestones + 1) * 2
+        );
+        uint64 currentStart = self.endTime;
+
+        for (uint64 i = 0; i <= missedMilestones; i++) {
+            missingTimestamps[i * 2] = currentStart;
+            missingTimestamps[i * 2 + 1] = currentStart + self.tranche;
+            currentStart += self.tranche;
+        }
+
+        return missingTimestamps;
     }
 
     /**
@@ -294,14 +399,12 @@ library TrancheSequence {
         return (self.endTime);
     }
 
-    ////////////////////////
-    // Helper functions
-    ////////////////////////
-
     /**
      * @dev Returns a boolean if current time is in the sequence
      */
-    function isCurrentMile(Data storage self) internal view returns (bool) {
+    function isCurrentMilestone(
+        Data storage self
+    ) internal view returns (bool) {
         return
             self.startTime < block.timestamp && self.endTime > block.timestamp;
     }
@@ -309,14 +412,18 @@ library TrancheSequence {
     /**
      * @dev Returns a boolean if mile sequence is started
      */
-    function isMileStarted(Data storage self) internal view returns (bool) {
+    function isMilestoneStarted(
+        Data storage self
+    ) internal view returns (bool) {
         return self.startTime > 0;
     }
 
     /**
      * @dev Returns a boolean if one slice of a sequence is ended
      */
-    function isMileExpired(Data storage self) internal view returns (bool) {
+    function isMilestoneExpired(
+        Data storage self
+    ) internal view returns (bool) {
         return self.endTime <= block.timestamp;
     }
 
@@ -324,10 +431,10 @@ library TrancheSequence {
      * @dev Returns a boolean if a time sequence can be extanded
      */
     function isExtandable(Data storage self) internal view returns (bool) {
-        if (!isMileStarted(self)) {
+        if (!isMilestoneStarted(self)) {
             return false;
         }
-        uint24 extendTimeSequence = self.extendTimeSequence * 1 days;
+        uint64 extendTimeSequence = self.extendTimeSequence;
         return self.endTime - extendTimeSequence <= block.timestamp;
     }
 }

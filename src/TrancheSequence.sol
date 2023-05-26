@@ -109,7 +109,7 @@ library TrancheSequence {
         // ones.isStarted = true;
         self.startTime = customStartTime;
         self.endTime = self.tranche + customStartTime;
-        self.tranche = self.tranche;
+        // self.tranche = self.tranche;
     }
 
     /**

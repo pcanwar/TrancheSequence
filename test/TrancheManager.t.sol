@@ -29,6 +29,9 @@ contract BaseTrancheManagerTest is Test {
         (uint64 startTime, uint64 endTime) = tranchManager.currentMile();
         console.log("start Time", startTime);
         console.log("End Time", endTime);
+
+        (uint64 a, uint64 b, , ) = tranchManager.trancheData();
+        console.log(a, b);
     }
 
     function testInitializeExample() public {

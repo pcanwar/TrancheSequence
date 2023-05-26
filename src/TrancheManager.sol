@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
-import "./openzzeppelin/Counters.sol";
 import "./TrancheSequence.sol";
 
 /**
@@ -30,17 +29,14 @@ contract TrancheManager {
     constructor(
         uint64 newTranchePeriod,
         uint64 newExtendSequence,
-        TrancheSequence.TimeUnit timeUnitT,
-        TrancheSequence.TimeUnit timeUnit2
+        TrancheSequence.TimeUnit UTNewTranchePeriod,
+        TrancheSequence.TimeUnit UTnewExtendSequence
     ) {
-        // require(newTranchePeriod > 0 && newExtendSequence > 0, "ZERO");
-        // trancheData.updateTranchePeriod(newTranchePeriod, timeUnit);
-        // trancheData.updateExtendSequence(newExtendSequence, timeUnit);
         trancheData.initMileStone(
             newTranchePeriod,
-            timeUnitT,
+            UTNewTranchePeriod,
             newExtendSequence,
-            timeUnit2
+            UTnewExtendSequence
         );
     }
 

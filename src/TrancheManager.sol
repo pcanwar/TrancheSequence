@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 import "./openzzeppelin/Counters.sol";
 import "./TrancheSequence.sol";
@@ -23,37 +23,55 @@ contract TrancheManager {
         bool isRewarded;
     }
 
-    mapping(address => mapping(uint => rewardMileStone))
-        internal addressToRewardMile;
+    mapping(address => mapping(uint => rewardMileStone)) internal UseCasePlayer;
     using TrancheSequence for TrancheSequence.Data;
     TrancheSequence.Data public trancheData;
 
     constructor(
-        uint64 tranchePeriod,
-        uint64 extendTimeSequence,
-        TrancheSequence.TimeUnit timeUnit
+        uint64 newTranchePeriod,
+        uint64 newExtendSequence,
+        TrancheSequence.TimeUnit timeUnitT,
+        TrancheSequence.TimeUnit timeUnit2
     ) {
-        require(tranchePeriod > 0 && extendTimeSequence > 0, "ZERO");
-        trancheData.tranche = tranchePeriod;
-        trancheData.extendTimeSequence = extendTimeSequence;
-        trancheData.initMileStone(timeUnit);
+        // require(newTranchePeriod > 0 && newExtendSequence > 0, "ZERO");
+        // trancheData.updateTranchePeriod(newTranchePeriod, timeUnit);
+        // trancheData.updateExtendSequence(newExtendSequence, timeUnit);
+        trancheData.initMileStone(
+            newTranchePeriod,
+            timeUnitT,
+            newExtendSequence,
+            timeUnit2
+        );
     }
 
-    function initialize(uint _limit) public {
+    function initializeExample(uint _limit) public {
         require(_limit > 0, "ZERO");
         limitations = _limit;
     }
 
-    function updateTranchePeriod(uint24 newTranchePeriod) public {
-        trancheData.updateTranchePeriod(newTranchePeriod);
+    // the implemention of a use case
+    function run() public {
+        // extend_();
+        uint64 _start = trancheData.currentStartMile();
+        uint balanceInTranche = UseCasePlayer[msg.sender][_start].tokens;
+        if (balanceInTranche < uint64(limitations)) {
+            UseCasePlayer[msg.sender][1].tokens++;
+        }
     }
 
-    function updateExtendSequence(
-        uint64 newExtendSequence,
-        TrancheSequence.TimeUnit timeUnit
-    ) public {
-        trancheData.updateExtendSequence(newExtendSequence, timeUnit);
-    }
+    // function updateTranchePeriod(
+    //     uint24 newTranchePeriod,
+    //     TrancheSequence.TimeUnit timeUnit
+    // ) public {
+    //     trancheData.updateTranchePeriod(newTranchePeriod, timeUnit);
+    // }
+
+    // function updateExtendSequence(
+    //     uint64 newExtendSequence,
+    //     TrancheSequence.TimeUnit timeUnit
+    // ) public {
+    //     trancheData.updateExtendSequence(newExtendSequence, timeUnit);
+    // }
 
     function getTrancheDays() public view returns (uint64) {
         return trancheData.getTrancheDays();
@@ -81,19 +99,6 @@ contract TrancheManager {
 
     function getCompletedMilestonesCount() public view returns (uint64) {
         return trancheData.getCompletedMilestonesCount();
-    }
-
-    function getMilestoneAtIndex(
-        uint64 index
-    ) public view returns (uint64, uint64) {
-        return trancheData.getMilestoneAtIndex(index);
-    }
-
-    function initMileStoneWithCustomStartTime(
-        uint64 customStartTime,
-        TrancheSequence.TimeUnit timeUnit
-    ) public {
-        trancheData.initMileStoneWithCustomStartTime(customStartTime, timeUnit);
     }
 
     /**
@@ -168,16 +173,5 @@ contract TrancheManager {
 
     function isExtanded() public view returns (bool) {
         return trancheData.isExtandable();
-    }
-
-    // swap nfts, there is a fee on each swap but once the nft-swap occur, no need to pay a new fees.
-    function swapTokenToToken() public {
-        extend_();
-
-        uint64 _start = trancheData.currentStartMile();
-
-        if (addressToRewardMile[msg.sender][_start].tokens < limitations) {
-            addressToRewardMile[msg.sender][_start].tokens++;
-        }
     }
 }

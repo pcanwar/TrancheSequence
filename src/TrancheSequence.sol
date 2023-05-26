@@ -1,5 +1,5 @@
-// SPDX-License-Identifier:  BSD 3
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: ISC
+pragma solidity ^0.8.13;
 
 /**
  * @title Tranche Sequence
@@ -33,6 +33,10 @@ library TrancheSequence {
         uint64 extendTimeSequence;
     }
 
+    // struct Initialization {
+    //     bool isStarted;
+    // }
+
     ////////////////////////
     // Utility functions
     ////////////////////////
@@ -43,19 +47,83 @@ library TrancheSequence {
     function convertTimeUnitToSeconds(
         TimeUnit timeUnit
     ) private pure returns (uint64) {
-        uint64 timeUint = 0;
+        // uint64 timeUint = 0;
         if (timeUnit == TimeUnit.Minutes) {
-            timeUint = 1 minutes;
+            return 1 minutes;
         } else if (timeUnit == TimeUnit.Hours) {
-            timeUint = 1 hours;
+            return 1 hours;
         } else if (timeUnit == TimeUnit.Days) {
-            timeUint = 1 days;
+            return 1 days;
         } else if (timeUnit == TimeUnit.Weeks) {
-            timeUint = 1 weeks;
-        } else {
-            revert("Invalid TimeUnit provided.");
+            return 1 weeks;
         }
-        return timeUint;
+        revert("Invalid TimeUnit provided.");
+
+        // return timeUint;
+    }
+
+    ////////////////////////////////////////////////
+    // Initialization and modification functions
+    ////////////////////////////////////////////////
+
+    /**
+     * @dev Init MileStone
+     *
+     * @notice this should be run in the smart contract constructor and also after reset the milestone
+     */
+    function initMileStone(
+        Data storage self, // Initialization storage ones
+        uint64 newTranchePeriod,
+        TimeUnit trancheTimeUnit,
+        uint64 newExtendSequence,
+        TimeUnit extendTimeUnit
+    ) internal {
+        // require(!ones.isStarted);
+        // require(self.tranche > 0 && self.startTime <= block.timestamp);
+
+        uint64 currentTime = uint64(block.timestamp);
+        updateTranchePeriod(self, newTranchePeriod, trancheTimeUnit);
+        updateExtendSequence(self, newExtendSequence, extendTimeUnit);
+        // ones.isStarted = true;
+        self.startTime = currentTime;
+        self.endTime = currentTime + self.tranche;
+        // self.tranche = self.tranche;
+    }
+
+    /**
+     * @dev Initialize with Custom Start Time: A function to initialize the milestone with a custom start time instead of the current block timestamp.
+     * This can be helpful if you want to start the milestones from a specific time in the past or future.
+     */
+    function initMileStoneWithCustomStartTime(
+        Data storage self,
+        // Initialization storage ones,
+        uint64 customStartTime
+    ) internal {
+        // require(!ones.isStarted);
+        require(
+            self.tranche > 0 && customStartTime <= block.timestamp,
+            "Invalid start time or tranche"
+        );
+
+        // uint64 tranche = self.tranche * convertTimeUnitToSeconds(timeUnit);
+        // ones.isStarted = true;
+        self.startTime = customStartTime;
+        self.endTime = self.tranche + customStartTime;
+        self.tranche = self.tranche;
+    }
+
+    /**
+     * @dev Increase MileStone based on the exsiting MileStone in the contract.
+     */
+
+    function increaseMileStone(Data storage self) internal {
+        // if (!isExtandable(self)) revert NotExtendable();
+        require(!isExtandable(self), "Not Extandable");
+        uint64 currentTime = self.endTime;
+        uint64 newStartTime = currentTime + getElapsedExcessTime(self);
+        uint64 newEndTime = self.tranche + newStartTime;
+        self.startTime = newStartTime;
+        self.endTime = newEndTime;
     }
 
     ////////////////////////
@@ -68,9 +136,12 @@ library TrancheSequence {
      */
     function updateTranchePeriod(
         Data storage self,
-        uint24 newTranchePeriod
-    ) internal {
-        self.tranche = newTranchePeriod;
+        uint64 newTranchePeriod,
+        TimeUnit timeUnit
+    ) private {
+        require(newTranchePeriod > 0, "Tranche period must be positive");
+        require(uint(timeUnit) <= 3, "Invalid time unit for tranche period");
+        self.tranche = newTranchePeriod * convertTimeUnitToSeconds(timeUnit);
     }
 
     /**
@@ -81,7 +152,9 @@ library TrancheSequence {
         Data storage self,
         uint64 newExtendSequence,
         TimeUnit timeUnit
-    ) internal {
+    ) private {
+        require(newExtendSequence > 0, "Extend sequence must be positive");
+        require(uint(timeUnit) <= 3, "Invalid time unit for extend sequence");
         uint64 time = convertTimeUnitToSeconds(timeUnit);
         self.extendTimeSequence = newExtendSequence * time;
     }
@@ -117,7 +190,16 @@ library TrancheSequence {
         if (isMilestoneExpired(self)) {
             return 0;
         }
-        return self.endTime - uint64(block.timestamp);
+        uint64 remainingTime = 0;
+        if (self.endTime > block.timestamp) {
+            remainingTime = self.endTime - uint64(block.timestamp);
+            if (isExtandable(self) && remainingTime < self.extendTimeSequence) {
+                remainingTime += self.extendTimeSequence;
+            }
+        }
+
+        return uint64(block.timestamp) + remainingTime;
+        // return self.endTime - uint64(block.timestamp);
     }
 
     /**
@@ -153,107 +235,6 @@ library TrancheSequence {
         return timeSinceLastMilestone / self.tranche;
     }
 
-    ////////////////////////////////////////////////
-    // Initialization and modification functions
-    ////////////////////////////////////////////////
-
-    /**
-     * @dev Initialize with Custom Start Time: A function to initialize the milestone with a custom start time instead of the current block timestamp.
-     * This can be helpful if you want to start the milestones from a specific time in the past or future.
-     */
-    function initMileStoneWithCustomStartTime(
-        Data storage self,
-        uint64 customStartTime,
-        TimeUnit timeUnit
-    ) internal {
-        require(self.tranche > 0 && customStartTime <= block.timestamp);
-        uint64 tranche = self.tranche * convertTimeUnitToSeconds(timeUnit);
-        self.startTime = customStartTime;
-        self.endTime = tranche + customStartTime;
-        self.tranche = tranche;
-    }
-
-    /**
-     * @dev Init MileStone
-     *
-     * @notice this should be run at the smart contract constructor and also after reset the milestone
-     */
-    function initMileStone(Data storage self, TimeUnit timeUnit) internal {
-        require(self.tranche > 0 && self.startTime <= block.timestamp);
-        uint64 currentTime = uint64(block.timestamp);
-        uint64 tranche = self.tranche * convertTimeUnitToSeconds(timeUnit);
-        self.startTime = currentTime;
-        self.endTime = currentTime + tranche;
-        self.tranche = tranche;
-    }
-
-    /**
-     * @dev Increase MileStone based on the exsiting MileStone in the contract.
-     */
-
-    function increaseMileStone(Data storage self) internal {
-        if (!isExtandable(self)) revert NotExtendable();
-        uint64 currentTime = self.endTime;
-        uint64 newStartTime = currentTime;
-        uint64 newEndTime = self.tranche +
-            currentTime +
-            getElapsedExcessTime(self);
-        self.startTime = newStartTime;
-        self.endTime = newEndTime;
-    }
-
-    function increaseGapMileStone(Data storage self) internal {
-        if (!isExtandable(self)) {
-            revert("Milestone is not extendable.");
-        }
-
-        if (self.tranche == 0) {
-            revert("Tranche is not set.");
-        }
-
-        uint64 currentTime = uint64(block.timestamp);
-        uint64 timeSinceLastMilestone = currentTime - self.endTime;
-        uint64 missedMilestones = timeSinceLastMilestone / self.tranche;
-        uint64 extraTime = timeSinceLastMilestone % self.tranche;
-
-        self.startTime = self.endTime + extraTime;
-        self.endTime = self.startTime + self.tranche * (missedMilestones + 1);
-    }
-
-    /**
-     * @dev GForce Increase Milestone: A function to force an increase in the milestone, regardless of whether it's currently extendable or not.
-     * This can be useful in cases where you need to advance the milestone manually.
-     */
-    function forceIncreaseMilestone(Data storage self) internal {
-        if (self.tranche == 0) {
-            revert("Tranche is not set");
-        }
-
-        uint64 currentTime = uint64(block.timestamp);
-        if (currentTime <= self.endTime) {
-            revert("Milestone is not yet expired.");
-        }
-
-        uint64 timeSinceLastMilestone = currentTime - self.endTime;
-        uint64 missedMilestones = timeSinceLastMilestone / self.tranche;
-        uint64 extraTime = timeSinceLastMilestone % self.tranche;
-
-        self.startTime = self.endTime + extraTime;
-        self.endTime = self.startTime + self.tranche * (missedMilestones + 1);
-    }
-
-    /**
-     * @dev renew the mile timestamp sequence.
-     * unused since we continue the milestone of the project.
-     */
-    function renewMileStone(Data storage self) internal {
-        if (!isExtandable(self)) revert NotExtendable();
-        uint64 currentTime = self.endTime;
-        uint64 tranche = self.tranche;
-        self.startTime = currentTime;
-        self.endTime = tranche + currentTime;
-    }
-
     ////////////////////////
     // Query functions
     ////////////////////////
@@ -261,27 +242,66 @@ library TrancheSequence {
     /**
      * @dev allow you to query the milestone info for any specific index.
      */
-    function getMilestoneAtIndex(
+
+    function getMilestoneAtIndexForward(
         Data storage self,
         uint64 index
     ) internal view returns (uint64, uint64) {
-        uint64 startTime = self.startTime + (index * self.tranche);
+        uint64 startTime = self.startTime +
+            (index * self.tranche) +
+            getElapsedExcessTime(self);
         uint64 endTime = startTime + self.tranche;
+        if (endTime <= block.timestamp) {
+            uint64 missedMilestones = (uint64(block.timestamp) - endTime) /
+                self.tranche;
+            startTime += (missedMilestones + 1) * self.tranche;
+            endTime = startTime + self.tranche;
+        }
         return (startTime, endTime);
     }
 
-    function getMilestoneAtIndex(
-        Data storage self,
-        uint64 index,
-        bool directionForward
-    ) internal view returns (uint64, uint64) {
-        uint64 startTime;
-        if (directionForward) {
-            startTime = self.startTime + (index * self.tranche);
-        } else {
-            startTime = self.endTime - ((index + 1) * self.tranche);
+    function getNextMilestoneTimestampFrom(
+        uint64 startTime,
+        uint64 tranche
+    ) private view returns (uint64) {
+        uint64 currentTime = uint64(block.timestamp);
+        if (startTime <= currentTime) {
+            uint64 timeSinceStart = currentTime - startTime;
+            uint64 milestonesPassed = timeSinceStart / tranche;
+            startTime += (milestonesPassed + 1) * tranche;
         }
-        uint64 endTime = startTime + self.tranche;
+        return startTime;
+    }
+
+    function getMilestoneAtIndexBackward(
+        Data storage self,
+        uint64 index
+    ) internal view returns (uint64, uint64) {
+        uint64 elapsedExcessTime = getElapsedExcessTime(self);
+        uint64 endTime = self.endTime -
+            (index * self.tranche) -
+            elapsedExcessTime;
+        uint64 startTime = endTime - self.tranche;
+
+        // Check if the milestone has been extended
+        if (isMilestoneExpired(self)) {
+            uint64 excessTime = getElapsedExcessTime(self);
+            startTime -= excessTime;
+            endTime = startTime + self.tranche;
+        }
+
+        // Adjust start and end times to stay within contract bounds
+        if (startTime < self.startTime) {
+            uint64 missedMilestones = (self.startTime - startTime) /
+                self.tranche;
+            endTime -= missedMilestones * self.tranche;
+            startTime = endTime - self.tranche;
+        } else if (endTime > self.endTime) {
+            uint64 missedMilestones = (endTime - self.endTime) / self.tranche;
+            startTime += missedMilestones * self.tranche;
+            endTime = startTime + self.tranche;
+        }
+
         return (startTime, endTime);
     }
 
@@ -434,5 +454,57 @@ library TrancheSequence {
         }
         uint64 extendTimeSequence = self.extendTimeSequence;
         return self.endTime - extendTimeSequence <= block.timestamp;
+    }
+
+    ////////////////////////
+    // Options functions
+    ////////////////////////
+
+    /**
+     * @dev GForce Increase Milestone: A function to force an increase in the milestone, regardless of whether it's currently extendable or not.
+     * This can be useful in cases where you need to advance the milestone manually.
+     */
+    function forceIncreaseMilestone(Data storage self) internal {
+        if (self.tranche == 0) {
+            revert("Tranche is not set");
+        }
+
+        uint64 currentTime = uint64(block.timestamp);
+        uint64 timeSinceLastMilestone = currentTime - self.endTime;
+        uint64 missedMilestones = timeSinceLastMilestone / self.tranche;
+        uint64 extraTime = timeSinceLastMilestone % self.tranche;
+
+        self.startTime = self.endTime + extraTime;
+        self.endTime = self.startTime + self.tranche * (missedMilestones + 1);
+    }
+
+    /**
+     * @dev renew the mile timestamp sequence.
+     * unused since we continue the milestone of the project.
+     */
+    function renewMileStone(Data storage self) internal {
+        if (!isExtandable(self)) revert NotExtendable();
+        uint64 currentTime = self.endTime;
+        uint64 tranche = self.tranche;
+        self.startTime = currentTime;
+        self.endTime = tranche + currentTime;
+    }
+
+    function increaseGapMileStone(Data storage self) internal {
+        if (!isExtandable(self)) {
+            revert("Milestone is not extendable.");
+        }
+
+        if (self.tranche == 0) {
+            revert("Tranche is not set.");
+        }
+
+        uint64 currentTime = uint64(block.timestamp);
+        uint64 timeSinceLastMilestone = currentTime - self.endTime;
+        uint64 missedMilestones = timeSinceLastMilestone / self.tranche;
+        uint64 extraTime = timeSinceLastMilestone % self.tranche;
+
+        self.startTime = self.endTime + extraTime;
+        self.endTime = self.startTime + self.tranche * (missedMilestones + 1);
     }
 }

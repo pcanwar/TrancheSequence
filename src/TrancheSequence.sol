@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: ISC
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
 /**
@@ -15,7 +15,7 @@ pragma solidity ^0.8.13;
 
 library TrancheSequence {
     // Define a custom error for when an extension is not allowed
-    error NotExtendable();
+    // error NotExtendable();
 
     // Define the different time units
     enum TimeUnit {
@@ -27,10 +27,10 @@ library TrancheSequence {
 
     // Structure for the library
     struct Data {
-        uint64 startTime;
-        uint64 endTime;
-        uint64 tranche;
-        uint64 extendTimeSequence;
+        uint256 startTime;
+        uint256 endTime;
+        uint256 tranche;
+        uint256 extendTimeSequence;
     }
 
     // struct Initialization {
@@ -46,8 +46,8 @@ library TrancheSequence {
      */
     function convertTimeUnitToSeconds(
         TimeUnit timeUnit
-    ) private pure returns (uint64) {
-        // uint64 timeUint = 0;
+    ) private pure returns (uint256) {
+        // uint256 timeUint = 0;
         if (timeUnit == TimeUnit.Minutes) {
             return 1 minutes;
         } else if (timeUnit == TimeUnit.Hours) {
@@ -73,15 +73,15 @@ library TrancheSequence {
      */
     function initMileStone(
         Data storage self, // Initialization storage ones
-        uint64 newTranchePeriod,
+        uint256 newTranchePeriod,
         TimeUnit trancheTimeUnit,
-        uint64 newExtendSequence,
+        uint256 newExtendSequence,
         TimeUnit extendTimeUnit
     ) internal {
         // require(!ones.isStarted);
         // require(self.tranche > 0 && self.startTime <= block.timestamp);
 
-        uint64 currentTime = uint64(block.timestamp);
+        uint256 currentTime = uint256(block.timestamp);
         updateTranchePeriod(self, newTranchePeriod, trancheTimeUnit);
         updateExtendSequence(self, newExtendSequence, extendTimeUnit);
         // ones.isStarted = true;
@@ -97,7 +97,7 @@ library TrancheSequence {
     function initMileStoneWithCustomStartTime(
         Data storage self,
         // Initialization storage ones,
-        uint64 customStartTime
+        uint256 customStartTime
     ) internal {
         // require(!ones.isStarted);
         require(
@@ -105,7 +105,7 @@ library TrancheSequence {
             "Invalid start time or tranche"
         );
 
-        // uint64 tranche = self.tranche * convertTimeUnitToSeconds(timeUnit);
+        // uint256 tranche = self.tranche * convertTimeUnitToSeconds(timeUnit);
         // ones.isStarted = true;
         self.startTime = customStartTime;
         self.endTime = self.tranche + customStartTime;
@@ -118,10 +118,10 @@ library TrancheSequence {
 
     function increaseMileStone(Data storage self) internal {
         // if (!isExtandable(self)) revert NotExtendable();
-        require(!isExtandable(self), "Not Extandable");
-        uint64 currentTime = self.endTime;
-        uint64 newStartTime = currentTime + getElapsedExcessTime(self);
-        uint64 newEndTime = self.tranche + newStartTime;
+        require(isExtandable(self), "Not Extandable");
+        uint256 currentTime = self.endTime;
+        uint256 newStartTime = currentTime + getElapsedExcessTime(self);
+        uint256 newEndTime = self.tranche + newStartTime;
         self.startTime = newStartTime;
         self.endTime = newEndTime;
     }
@@ -136,7 +136,7 @@ library TrancheSequence {
      */
     function updateTranchePeriod(
         Data storage self,
-        uint64 newTranchePeriod,
+        uint256 newTranchePeriod,
         TimeUnit timeUnit
     ) private {
         require(newTranchePeriod > 0, "Tranche period must be positive");
@@ -150,12 +150,12 @@ library TrancheSequence {
      */
     function updateExtendSequence(
         Data storage self,
-        uint64 newExtendSequence,
+        uint256 newExtendSequence,
         TimeUnit timeUnit
     ) private {
         require(newExtendSequence > 0, "Extend sequence must be positive");
         require(uint(timeUnit) <= 3, "Invalid time unit for extend sequence");
-        uint64 time = convertTimeUnitToSeconds(timeUnit);
+        uint256 time = convertTimeUnitToSeconds(timeUnit);
         self.extendTimeSequence = newExtendSequence * time;
     }
 
@@ -166,7 +166,7 @@ library TrancheSequence {
     /**
      * @dev Get the tranche of days
      */
-    function getTrancheDays(Data storage self) internal view returns (uint64) {
+    function getTrancheDays(Data storage self) internal view returns (uint256) {
         return self.tranche;
     }
 
@@ -175,7 +175,7 @@ library TrancheSequence {
      */
     function getExtendTimeSequence(
         Data storage self
-    ) internal view returns (uint64) {
+    ) internal view returns (uint256) {
         return self.extendTimeSequence;
     }
 
@@ -186,20 +186,20 @@ library TrancheSequence {
      */
     function getRemainingTime(
         Data storage self
-    ) internal view returns (uint64) {
+    ) internal view returns (uint256) {
         if (isMilestoneExpired(self)) {
             return 0;
         }
-        uint64 remainingTime = 0;
+        uint256 remainingTime = 0;
         if (self.endTime > block.timestamp) {
-            remainingTime = self.endTime - uint64(block.timestamp);
+            remainingTime = self.endTime - uint256(block.timestamp);
             if (isExtandable(self) && remainingTime < self.extendTimeSequence) {
                 remainingTime += self.extendTimeSequence;
             }
         }
 
-        return uint64(block.timestamp) + remainingTime;
-        // return self.endTime - uint64(block.timestamp);
+        return uint256(block.timestamp) + remainingTime;
+        // return self.endTime - uint256(block.timestamp);
     }
 
     /**
@@ -209,11 +209,11 @@ library TrancheSequence {
      */
     function getNextMilestoneTimestamp(
         Data storage self
-    ) internal view returns (uint64) {
+    ) internal view returns (uint256) {
         if (isMilestoneExpired(self)) {
-            uint64 currentTime = uint64(block.timestamp);
-            uint64 timeSinceLastMilestone = currentTime - self.endTime;
-            uint64 missedMilestones = timeSinceLastMilestone / self.tranche;
+            uint256 currentTime = uint256(block.timestamp);
+            uint256 timeSinceLastMilestone = currentTime - self.endTime;
+            uint256 missedMilestones = timeSinceLastMilestone / self.tranche;
             return self.endTime + self.tranche * (missedMilestones + 1);
         }
         return self.endTime + self.tranche;
@@ -226,12 +226,12 @@ library TrancheSequence {
      */
     function getMissedMilestonesCount(
         Data storage self
-    ) internal view returns (uint64) {
+    ) internal view returns (uint256) {
         if (!isMilestoneExpired(self)) {
             return 0;
         }
-        uint64 currentTime = uint64(block.timestamp);
-        uint64 timeSinceLastMilestone = currentTime - self.endTime;
+        uint256 currentTime = uint256(block.timestamp);
+        uint256 timeSinceLastMilestone = currentTime - self.endTime;
         return timeSinceLastMilestone / self.tranche;
     }
 
@@ -242,17 +242,16 @@ library TrancheSequence {
     /**
      * @dev allow you to query the milestone info for any specific index.
      */
-
     function getMilestoneAtIndexForward(
         Data storage self,
-        uint64 index
-    ) internal view returns (uint64, uint64) {
-        uint64 startTime = self.startTime +
+        uint256 index
+    ) internal view returns (uint256, uint256) {
+        uint256 startTime = self.startTime +
             (index * self.tranche) +
             getElapsedExcessTime(self);
-        uint64 endTime = startTime + self.tranche;
+        uint256 endTime = startTime + self.tranche;
         if (endTime <= block.timestamp) {
-            uint64 missedMilestones = (uint64(block.timestamp) - endTime) /
+            uint256 missedMilestones = (uint256(block.timestamp) - endTime) /
                 self.tranche;
             startTime += (missedMilestones + 1) * self.tranche;
             endTime = startTime + self.tranche;
@@ -261,13 +260,13 @@ library TrancheSequence {
     }
 
     function getNextMilestoneTimestampFrom(
-        uint64 startTime,
-        uint64 tranche
-    ) private view returns (uint64) {
-        uint64 currentTime = uint64(block.timestamp);
+        uint256 startTime,
+        uint256 tranche
+    ) private view returns (uint256) {
+        uint256 currentTime = uint256(block.timestamp);
         if (startTime <= currentTime) {
-            uint64 timeSinceStart = currentTime - startTime;
-            uint64 milestonesPassed = timeSinceStart / tranche;
+            uint256 timeSinceStart = currentTime - startTime;
+            uint256 milestonesPassed = timeSinceStart / tranche;
             startTime += (milestonesPassed + 1) * tranche;
         }
         return startTime;
@@ -275,29 +274,29 @@ library TrancheSequence {
 
     function getMilestoneAtIndexBackward(
         Data storage self,
-        uint64 index
-    ) internal view returns (uint64, uint64) {
-        uint64 elapsedExcessTime = getElapsedExcessTime(self);
-        uint64 endTime = self.endTime -
+        uint256 index
+    ) internal view returns (uint256, uint256) {
+        uint256 elapsedExcessTime = getElapsedExcessTime(self);
+        uint256 endTime = self.endTime -
             (index * self.tranche) -
             elapsedExcessTime;
-        uint64 startTime = endTime - self.tranche;
+        uint256 startTime = endTime - self.tranche;
 
         // Check if the milestone has been extended
         if (isMilestoneExpired(self)) {
-            uint64 excessTime = getElapsedExcessTime(self);
+            uint256 excessTime = getElapsedExcessTime(self);
             startTime -= excessTime;
             endTime = startTime + self.tranche;
         }
 
         // Adjust start and end times to stay within contract bounds
         if (startTime < self.startTime) {
-            uint64 missedMilestones = (self.startTime - startTime) /
+            uint256 missedMilestones = (self.startTime - startTime) /
                 self.tranche;
             endTime -= missedMilestones * self.tranche;
             startTime = endTime - self.tranche;
         } else if (endTime > self.endTime) {
-            uint64 missedMilestones = (endTime - self.endTime) / self.tranche;
+            uint256 missedMilestones = (endTime - self.endTime) / self.tranche;
             startTime += missedMilestones * self.tranche;
             endTime = startTime + self.tranche;
         }
@@ -312,9 +311,9 @@ library TrancheSequence {
      */
     function getTotalMilestones(
         Data storage self
-    ) internal view returns (uint64) {
-        uint64 currentTime = uint64(block.timestamp);
-        uint64 elapsedTranches = (currentTime - self.startTime) / self.tranche;
+    ) internal view returns (uint256) {
+        uint256 currentTime = uint256(block.timestamp);
+        uint256 elapsedTranches = (currentTime - self.startTime) / self.tranche;
         return elapsedTranches + 1;
     }
 
@@ -323,12 +322,12 @@ library TrancheSequence {
      */
     function getCompletedMilestonesCount(
         Data storage self
-    ) internal view returns (uint64) {
-        uint64 currentTime = uint64(block.timestamp);
+    ) internal view returns (uint256) {
+        uint256 currentTime = uint256(block.timestamp);
         if (currentTime <= self.startTime) {
             return 0;
         }
-        uint64 elapsedTranches = (currentTime - self.startTime) / self.tranche;
+        uint256 elapsedTranches = (currentTime - self.startTime) / self.tranche;
         return elapsedTranches;
     }
 
@@ -339,10 +338,10 @@ library TrancheSequence {
      */
     function getElapsedExcessTime(
         Data storage self
-    ) private view returns (uint64) {
-        uint64 timestamp = uint64(block.timestamp);
+    ) private view returns (uint256) {
+        uint256 timestamp = uint256(block.timestamp);
         if (self.endTime < timestamp) {
-            uint64 _b = timestamp - self.endTime;
+            uint256 _b = timestamp - self.endTime;
             return _b;
         } else {
             return 0;
@@ -358,21 +357,21 @@ library TrancheSequence {
      */
     function listMissingTimestamps(
         Data storage self
-    ) internal view returns (uint64[] memory) {
+    ) internal view returns (uint256[] memory) {
         if (!isMilestoneExpired(self)) {
-            return new uint64[](0);
+            return new uint256[](0);
         }
 
-        uint64 currentTime = uint64(block.timestamp);
-        uint64 timeSinceLastMilestone = currentTime - self.endTime;
-        uint64 missedMilestones = timeSinceLastMilestone / self.tranche;
+        uint256 currentTime = uint256(block.timestamp);
+        uint256 timeSinceLastMilestone = currentTime - self.endTime;
+        uint256 missedMilestones = timeSinceLastMilestone / self.tranche;
 
-        uint64[] memory missingTimestamps = new uint64[](
+        uint256[] memory missingTimestamps = new uint256[](
             (missedMilestones + 1) * 2
         );
-        uint64 currentStart = self.endTime;
+        uint256 currentStart = self.endTime;
 
-        for (uint64 i = 0; i <= missedMilestones; i++) {
+        for (uint256 i = 0; i <= missedMilestones; i++) {
             missingTimestamps[i * 2] = currentStart;
             missingTimestamps[i * 2 + 1] = currentStart + self.tranche;
             currentStart += self.tranche;
@@ -396,7 +395,7 @@ library TrancheSequence {
      */
     function currentMile(
         Data storage self
-    ) internal view returns (uint64, uint64) {
+    ) internal view returns (uint256, uint256) {
         return (self.startTime, self.endTime);
     }
 
@@ -406,14 +405,16 @@ library TrancheSequence {
 
     function currentStartMile(
         Data storage self
-    ) internal view returns (uint64) {
+    ) internal view returns (uint256) {
         return (self.startTime);
     }
 
     /**
      * @return the current end timer.
      */
-    function currentEndtMile(Data storage self) internal view returns (uint64) {
+    function currentEndtMile(
+        Data storage self
+    ) internal view returns (uint256) {
         return (self.endTime);
     }
 
@@ -452,7 +453,7 @@ library TrancheSequence {
         if (!isMilestoneStarted(self)) {
             return false;
         }
-        uint64 extendTimeSequence = self.extendTimeSequence;
+        uint256 extendTimeSequence = self.extendTimeSequence;
         return self.endTime - extendTimeSequence <= block.timestamp;
     }
 
@@ -469,10 +470,10 @@ library TrancheSequence {
             revert("Tranche is not set");
         }
 
-        uint64 currentTime = uint64(block.timestamp);
-        uint64 timeSinceLastMilestone = currentTime - self.endTime;
-        uint64 missedMilestones = timeSinceLastMilestone / self.tranche;
-        uint64 extraTime = timeSinceLastMilestone % self.tranche;
+        uint256 currentTime = uint256(block.timestamp);
+        uint256 timeSinceLastMilestone = currentTime - self.endTime;
+        uint256 missedMilestones = timeSinceLastMilestone / self.tranche;
+        uint256 extraTime = timeSinceLastMilestone % self.tranche;
 
         self.startTime = self.endTime + extraTime;
         self.endTime = self.startTime + self.tranche * (missedMilestones + 1);
@@ -483,26 +484,29 @@ library TrancheSequence {
      * unused since we continue the milestone of the project.
      */
     function renewMileStone(Data storage self) internal {
-        if (!isExtandable(self)) revert NotExtendable();
-        uint64 currentTime = self.endTime;
-        uint64 tranche = self.tranche;
+        // if (!isExtandable(self)) revert NotExtendable();
+        require(isExtandable(self), "Not Extandable Yet");
+
+        uint256 currentTime = self.endTime;
+        uint256 tranche = self.tranche;
         self.startTime = currentTime;
         self.endTime = tranche + currentTime;
     }
 
     function increaseGapMileStone(Data storage self) internal {
-        if (!isExtandable(self)) {
-            revert("Milestone is not extendable.");
-        }
+        // if (!isExtandable(self)) {
+        //     revert("Milestone is not extendable.");
+        // }
+        require(isExtandable(self), "Not Extandable Yet");
 
         if (self.tranche == 0) {
             revert("Tranche is not set.");
         }
 
-        uint64 currentTime = uint64(block.timestamp);
-        uint64 timeSinceLastMilestone = currentTime - self.endTime;
-        uint64 missedMilestones = timeSinceLastMilestone / self.tranche;
-        uint64 extraTime = timeSinceLastMilestone % self.tranche;
+        uint256 currentTime = uint256(block.timestamp);
+        uint256 timeSinceLastMilestone = currentTime - self.endTime;
+        uint256 missedMilestones = timeSinceLastMilestone / self.tranche;
+        uint256 extraTime = timeSinceLastMilestone % self.tranche;
 
         self.startTime = self.endTime + extraTime;
         self.endTime = self.startTime + self.tranche * (missedMilestones + 1);

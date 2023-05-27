@@ -16,27 +16,47 @@ import "./TrancheSequence.sol";
 contract TrancheManager {
     uint public limitations;
 
-    struct rewardMileStone {
-        uint tokens;
-        uint endTime;
-        bool isRewarded;
-    }
+    // struct paymentPerMileStone {
+    //     uint tokens;
+    //     uint endTime;
+    //     bool isRewarded;
+    // }
 
-    mapping(address => mapping(uint => rewardMileStone)) internal UseCasePlayer;
+    mapping(address => mapping(uint => uint)) public paymentPerMileStone;
     using TrancheSequence for TrancheSequence.Data;
     TrancheSequence.Data public trancheData;
 
     constructor(
-        uint64 newTranchePeriod,
-        uint64 newExtendSequence,
-        TrancheSequence.TimeUnit UTNewTranchePeriod,
-        TrancheSequence.TimeUnit UTnewExtendSequence
+        uint256 newTranchePeriod,
+        uint256 newExtendSequence,
+        TrancheSequence.TimeUnit timeUnitT,
+        TrancheSequence.TimeUnit timeUnit2
     ) {
+        // require(newTranchePeriod > 0 && newExtendSequence > 0, "ZERO");
+        // trancheData.updateTranchePeriod(newTranchePeriod, timeUnit);
+        // trancheData.updateExtendSequence(newExtendSequence, timeUnit);
         trancheData.initMileStone(
             newTranchePeriod,
-            UTNewTranchePeriod,
+            timeUnitT,
             newExtendSequence,
-            UTnewExtendSequence
+            timeUnit2
+        );
+    }
+
+    function restart(
+        uint256 newTranchePeriod,
+        uint256 newExtendSequence,
+        TrancheSequence.TimeUnit timeUnitT,
+        TrancheSequence.TimeUnit timeUnit2
+    ) external {
+        // require(newTranchePeriod > 0 && newExtendSequence > 0, "ZERO");
+        // trancheData.updateTranchePeriod(newTranchePeriod, timeUnit);
+        // trancheData.updateExtendSequence(newExtendSequence, timeUnit);
+        trancheData.initMileStone(
+            newTranchePeriod,
+            timeUnitT,
+            newExtendSequence,
+            timeUnit2
         );
     }
 
@@ -47,53 +67,39 @@ contract TrancheManager {
 
     // the implemention of a use case
     function run() public {
-        // extend_();
-        uint64 _start = trancheData.currentStartMile();
-        uint balanceInTranche = UseCasePlayer[msg.sender][_start].tokens;
-        if (balanceInTranche < uint64(limitations)) {
-            UseCasePlayer[msg.sender][1].tokens++;
+        extend_();
+        uint256 limit = limitations;
+        uint256 _start = trancheData.currentStartMile();
+        if (paymentPerMileStone[msg.sender][_start] < limit) {
+            paymentPerMileStone[msg.sender][_start] += 400;
         }
     }
 
-    // function updateTranchePeriod(
-    //     uint24 newTranchePeriod,
-    //     TrancheSequence.TimeUnit timeUnit
-    // ) public {
-    //     trancheData.updateTranchePeriod(newTranchePeriod, timeUnit);
-    // }
-
-    // function updateExtendSequence(
-    //     uint64 newExtendSequence,
-    //     TrancheSequence.TimeUnit timeUnit
-    // ) public {
-    //     trancheData.updateExtendSequence(newExtendSequence, timeUnit);
-    // }
-
-    function getTrancheDays() public view returns (uint64) {
+    function getTrancheDays() public view returns (uint256) {
         return trancheData.getTrancheDays();
     }
 
-    function getExtendTimeSequence() public view returns (uint64) {
+    function getExtendTimeSequence() public view returns (uint256) {
         return trancheData.getExtendTimeSequence();
     }
 
-    function getRemainingTime() public view returns (uint64) {
+    function getRemainingTime() public view returns (uint256) {
         return trancheData.getRemainingTime();
     }
 
-    function getNextMilestoneTimestamp() public view returns (uint64) {
+    function getNextMilestoneTimestamp() public view returns (uint256) {
         return trancheData.getNextMilestoneTimestamp();
     }
 
-    function getMissedMilestonesCount() public view returns (uint64) {
+    function getMissedMilestonesCount() public view returns (uint256) {
         return trancheData.getMissedMilestonesCount();
     }
 
-    function getTotalMilestones() public view returns (uint64) {
+    function getTotalMilestones() public view returns (uint256) {
         return trancheData.getTotalMilestones();
     }
 
-    function getCompletedMilestonesCount() public view returns (uint64) {
+    function getCompletedMilestonesCount() public view returns (uint256) {
         return trancheData.getCompletedMilestonesCount();
     }
 
@@ -120,7 +126,7 @@ contract TrancheManager {
         trancheData.renewMileStone();
     }
 
-    function listMissingTimestamps() public view returns (uint64[] memory) {
+    function listMissingTimestamps() public view returns (uint256[] memory) {
         return trancheData.listMissingTimestamps();
     }
 
@@ -134,15 +140,15 @@ contract TrancheManager {
     /**
      * @dev Returns the current MileStone
      */
-    function currentMile() public view returns (uint64, uint64) {
+    function currentMile() public view returns (uint256, uint256) {
         return trancheData.currentMile();
     }
 
-    function currentStartMile() public view returns (uint64) {
+    function currentStartMile() public view returns (uint256) {
         return trancheData.currentStartMile();
     }
 
-    function currentEndtMile() public view returns (uint64) {
+    function currentEndtMile() public view returns (uint256) {
         return trancheData.currentEndtMile();
     }
 

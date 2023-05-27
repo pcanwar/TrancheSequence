@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
 import "./TrancheSequence.sol";
@@ -43,6 +43,15 @@ contract TrancheManager {
         );
     }
 
+    // check the balance
+    function balance(
+        // address account,
+        uint tranche
+    ) public view returns (uint256) {
+        return paymentPerMileStone[msg.sender][tranche];
+    }
+
+    // restart the time and it is similar to the constructor, this should be run by the admin
     function restart(
         uint256 newTranchePeriod,
         uint256 newExtendSequence,
@@ -67,7 +76,7 @@ contract TrancheManager {
 
     // the implemention of a use case
     function run() public {
-        extend_();
+        // extend_();
         uint256 limit = limitations;
         uint256 _start = trancheData.currentStartMile();
         if (paymentPerMileStone[msg.sender][_start] < limit) {

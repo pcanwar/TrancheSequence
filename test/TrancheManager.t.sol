@@ -13,35 +13,41 @@ contract BaseTrancheManagerTest is Test {
     function setUp() public virtual {
         userA = address(uint160(uint256(keccak256(abi.encodePacked("userA")))));
         vm.label(userA, "userA");
-        uint64 tranch = 3;
-        uint64 abletoExtendAfter = 2;
+        uint256 tranch = 3;
+        uint256 abletoExtendAfter = 2;
         vm.prank(userA);
 
         tranchManager = new TrancheManager(
             tranch,
             abletoExtendAfter,
-            TrancheSequence.TimeUnit.Minutes,
-            TrancheSequence.TimeUnit.Minutes
+            TrancheSequence.TimeUnit.Hours,
+            TrancheSequence.TimeUnit.Days
         );
     }
 
     function testCurrentMile() public view {
-        (uint64 startTime, uint64 endTime) = tranchManager.currentMile();
+        (uint256 startTime, uint256 endTime) = tranchManager.currentMile();
         console.log("start Time", startTime);
         console.log("End Time", endTime);
 
-        (uint64 a, uint64 b, , ) = tranchManager.trancheData();
+        (uint256 a, uint256 b, , ) = tranchManager.trancheData();
         console.log(a, b);
     }
 
     function testInitializeExample() public {
         vm.prank(userA);
-        tranchManager.initializeExample(1);
+        tranchManager.initializeExample(_limit);
     }
 
     function testRunUserCase() public {
+        (uint256 startTime, , , ) = tranchManager.trancheData();
+        vm.prank(userA);
+        tranchManager.initializeExample(_limit);
         vm.prank(userA);
         tranchManager.run();
+        vm.prank(userA);
+        uint balance = tranchManager.balance(startTime);
+        console.log("balance : ", balance);
     }
 }
 

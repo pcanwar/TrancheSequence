@@ -2,44 +2,199 @@
 title: Tranche Sequence
 description: A tranche sequence refers to a series of payment opportunities that occur at specified time intervals.
 
-author: Anwar Alruwaili @pcanwar <ipcanw@gmail.com>, Dov Kruger, Shaun Cole @secole1
+author: Anwar Alruwaili @pcanwar <ipcanw@gmail.com>, Shaun Cole @secole1
 discussions-to: <URL>
 status: Draft
 type: Standards Track
 category: ERC # Only required for Standards Track. Otherwise, remove this field.
-created: 2019
+created: 2020
 # requires: <EIP number(s)> # Only required when you reference an EIP in the `Specification` section. Otherwise, remove this field.
 ---
 
 ## Abstract:
 
-This concept is extended through a library that builds on ERC20, ERC721, and other protocols, offering a transparent and structured approach to on-chain time management. With the help of additional functions, the library enables stakeholders to define time milestones and a sequence of opportunities to evaluate and decide on the next steps.
+This concept is extended through a library that builds on ERC20, ERC721, and other standards, offering a transparent and structured approach to on-chain time management. With the help of additional functions, the library enables stakeholders to define time milestones and a sequence of opportunities to evaluate and decide on the next steps.
 
 ## Motivation:
 
-The motivation behind this library is to overcome the challenges of managing multi-stage projects or use cases on utility tokens or NFTs while providing a fair and transparent approach to on-chain time management. This structured approach facilitates effective smart contract management and enables stakeholders to progress and make informed decisions. The library can be applied to various use cases, such as salary negotiations, project funding, or resource allocation, promoting trust and collaboration among stakeholders. The protocol's flexibility and transparency can result in a fairer and more effective decision-making process for all parties involved.
+The motivation behind this library is to overcome the challenges of managing multi-stage projects or use cases on utility tokens or NFTs while providing a fair and transparent approach to on-chain time management. This structured approach facilitates effective smart contract management and enables stakeholders to progress and make informed decisions. The library can be applied to various use cases, such as salary negotiations, project funding, or resource allocation, promoting trust and collaboration among stakeholders. The library's flexibility and transparency can result in a fairer and more effective decision-making process for all parties involved.
 
 The following properties make tranche sequences an effective tool for managing multi-stage use cases and projects on utility tokens or NFTs in a structured and transparent manner:
 
 ### Features
 
-- It is useful library to contain multiple hierarchies timestamp.
-- It adds a list of the timestamp.
-- Increase sequence based on the exsiting sequence in the contract.
-- Time can be increased on time if it is needed in the smart contract
-- Admin can only increased the time
-- There is a rest time on sequence to provide flexibility for stakeholders.
-- There is no decresed time function, meaning once a timestamp is added, it cannot be removed or modified
+Flexible Time Units: The library allows you to define time in various units: minutes, hours, days, and weeks. This enables flexibility when dealing with different time periods.
+
+Customizable Tranches: The library is built around the concept of tranches, or blocks of time, that can be used to represent milestones. These tranches can be initialized according to your needs.
+
+Dynamic Time Sequencing: It enables dynamic time sequencing. The time sequence can be increased based on the existing sequence in the smart contract.
+
+Rest Time Inclusion: The library includes a feature for a rest time on the sequence. This offers flexibility for stakeholders, allowing for pauses or intervals between different time sequences.
+
+Time Extension: The library allows for the time of a particular sequence to be increased if needed. This is particularly useful when an ongoing event or process needs an extended time duration.
+
+Immutable Time Entries: Once a timestamp is added, it cannot be removed or modified. This feature offers immutability for time entries, ensuring the integrity and reliability of the time sequences.
+
+Milestone Tracking: The library provides utilities to track milestones and understand their progress. You can get the number of completed and missed milestones, check if the current timestamp is within a milestone, and even forcibly advance to the next milestone.
+
+Timestamp Reporting: The library provides utilities for reporting missed timestamps, getting the start and end times of the current milestone, and listing all missing timestamps since the last completed milestone.
+
+Force Increase of Milestones: If needed, milestones can be forcibly advanced manually, regardless of whether they're currently extendable or not.
+
+Start Time Customization: The library allows the initialization of milestones with a custom start time instead of the current block timestamp, which can be useful for certain project timelines.
+
+Effective Milestone Management: Functions such as resetMileStone, isCurrentMilestone, isMilestoneStarted, and isMilestoneExpired provide the ability to effectively manage milestones, including initiating, resetting, tracking, and identifying the completion of a milestone.
+
+Precision and Accuracy: The library uses block.timestamp for timekeeping, which ensures precise and accurate timestamps for all operations. This accuracy is essential for a fair and accurate representation of project progress.
 
 ### Tech
 
-- InitMileStone function should be run in the smart contract constructor and also after reset the milestone
+- InitMileStone function should be init in the smart contract constructor and also after reset the milestone
 
 ## Specification
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119 and RFC 8174.
 
 ## Test Cases
+
+```js
+    // Define a custom error for when an extension is not allowed
+    // Define the different time units
+    enum TimeUnit {
+        Minutes,
+        Hours,
+        Days,
+        Weeks
+    }
+
+    // Structure for the library
+    struct Data {
+        uint256 startTime;
+        uint256 endTime;
+        uint256 tranche;
+        uint256 extendTimeSequence;
+    }
+
+    ////////////////////////
+    // Utility functions
+    ////////////////////////
+
+    /**
+     * @dev Convert time units to seconds.
+     */
+    function convertTimeUnitToSeconds(
+        TimeUnit timeUnit
+    ) private pure returns (uint256) {
+        // uint256 timeUint = 0;
+        if (timeUnit == TimeUnit.Minutes) {
+            return 1 minutes;
+        } else if (timeUnit == TimeUnit.Hours) {
+            return 1 hours;
+        } else if (timeUnit == TimeUnit.Days) {
+            return 1 days;
+        } else if (timeUnit == TimeUnit.Weeks) {
+            return 1 weeks;
+        }
+        revert("Invalid TimeUnit provided.");
+
+        // return timeUint;
+    }
+
+    ////////////////////////////////////////////////
+    // Initialization functions
+    ////////////////////////////////////////////////
+
+    /**
+     * @dev Init MileStone
+     *
+     * @notice this should be run in the smart contract constructor and also after reset the milestone
+     */
+    function initMileStone(
+        Data storage self, // Initialization storage ones
+        uint256 newTranchePeriod,
+        TimeUnit trancheTimeUnit,
+        uint256 newExtendSequence,
+        TimeUnit extendTimeUnit
+    ) internal {
+        // require(!ones.isStarted);
+        // require(self.tranche > 0 && self.startTime <= block.timestamp);
+
+        uint256 currentTime = uint256(block.timestamp);
+        updateTranchePeriod(self, newTranchePeriod, trancheTimeUnit);
+        updateExtendSequence(self, newExtendSequence, extendTimeUnit);
+        // ones.isStarted = true;
+        self.startTime = currentTime;
+        self.endTime = currentTime + self.tranche;
+        // self.tranche = self.tranche;
+    }
+
+    /**
+     * @dev Initialize with Custom Start Time: A function to initialize the milestone with a custom start time instead of the current block timestamp.
+     * This can be helpful if you want to start the milestones from a specific time in the past or future.
+     */
+    function initMileStoneWithCustomStartTime(
+        Data storage self,
+        // Initialization storage ones,
+        uint256 customStartTime
+    ) internal {
+        // require(!ones.isStarted);
+        require(
+            self.tranche > 0 && customStartTime <= block.timestamp,
+            "Invalid start time or tranche"
+        );
+
+
+        self.startTime = customStartTime;
+        self.endTime = self.tranche + customStartTime;
+    }
+
+    /**
+     * @dev Increase MileStone based on the exsiting MileStone in the contract.
+     */
+
+    function increaseMileStone(Data storage self) internal {
+        require(isExtandable(self), "Not Extandable");
+        uint256 currentTime = self.endTime;
+        uint256 newStartTime = currentTime + getElapsedExcessTime(self);
+        uint256 newEndTime = self.tranche + newStartTime;
+        self.startTime = newStartTime;
+        self.endTime = newEndTime;
+    }
+
+    ////////////////////////
+    // Update functions
+    ////////////////////////
+
+    /**
+     * @dev Update Tranche Period: to update the tranche period,
+     * in case there's a need to change the tranche duration after the library has been deployed.
+     */
+    function updateTranchePeriod(
+        Data storage self,
+        uint256 newTranchePeriod,
+        TimeUnit timeUnit
+    ) private {
+        require(newTranchePeriod > 0, "Tranche period must be positive");
+        require(uint(timeUnit) <= 3, "Invalid time unit for tranche period");
+        self.tranche = newTranchePeriod * convertTimeUnitToSeconds(timeUnit);
+    }
+
+    /**
+     * @dev Update Extend Time Sequence: to update the extend time sequence,
+     * allowing the contract administrator to change the time sequence after deployment.
+     */
+    function updateExtendSequence(
+        Data storage self,
+        uint256 newExtendSequence,
+        TimeUnit timeUnit
+    ) private {
+        require(newExtendSequence > 0, "Extend sequence must be positive");
+        require(uint(timeUnit) <= 3, "Invalid time unit for extend sequence");
+        uint256 time = convertTimeUnitToSeconds(timeUnit);
+        self.extendTimeSequence = newExtendSequence * time;
+    }
+
+```
 
 ```sh
     constructor(
@@ -94,6 +249,10 @@ Backwards Compatibility
 No backward compatibility issues found.
 
 The composable extension is OPTIONAL for this library.
+
+## Reference
+
+Crowdfunding with Periodic Milestone Payments Using a Smart Contract to Implement Fair E-Voting
 
 ## License
 

@@ -81,13 +81,12 @@ library TrancheSequence {
         // require(!ones.isStarted);
         // require(self.tranche > 0 && self.startTime <= block.timestamp);
 
-        uint256 currentTime = uint256(block.timestamp);
         updateTranchePeriod(self, newTranchePeriod, trancheTimeUnit);
         updateExtendSequence(self, newExtendSequence, extendTimeUnit);
         // ones.isStarted = true;
+        uint256 currentTime = block.timestamp;
         self.startTime = currentTime;
         self.endTime = currentTime + self.tranche;
-        // self.tranche = self.tranche;
     }
 
     /**
@@ -96,8 +95,11 @@ library TrancheSequence {
      */
     function initMileStoneWithCustomStartTime(
         Data storage self,
-        // Initialization storage ones,
-        uint256 customStartTime
+        uint64 newTranchePeriod,
+        TimeUnit trancheTimeUnit,
+        uint64 newExtendSequence,
+        TimeUnit extendTimeUnit,
+        uint64 customStartTime
     ) internal {
         // require(!ones.isStarted);
         require(
@@ -105,11 +107,26 @@ library TrancheSequence {
             "Invalid start time or tranche"
         );
 
-        // uint256 tranche = self.tranche * convertTimeUnitToSeconds(timeUnit);
-        // ones.isStarted = true;
+        require(newTranchePeriod > 0, "Tranche period must be positive");
+        require(
+            uint(trancheTimeUnit) <= 3,
+            "Invalid time unit for tranche period"
+        );
+        require(newExtendSequence > 0, "Extend sequence must be positive");
+        require(
+            uint(extendTimeUnit) <= 3,
+            "Invalid time unit for extend sequence"
+        );
+        require(
+            self.tranche > 0 && customStartTime <= block.timestamp,
+            "Invalid start time or tranche"
+        );
+
+        updateTranchePeriod(self, newTranchePeriod, trancheTimeUnit);
+        updateExtendSequence(self, newExtendSequence, extendTimeUnit);
+
         self.startTime = customStartTime;
         self.endTime = self.tranche + customStartTime;
-        // self.tranche = self.tranche;
     }
 
     /**
@@ -192,13 +209,13 @@ library TrancheSequence {
         }
         uint256 remainingTime = 0;
         if (self.endTime > block.timestamp) {
-            remainingTime = self.endTime - uint256(block.timestamp);
+            remainingTime = self.endTime - block.timestamp;
             if (isExtandable(self) && remainingTime < self.extendTimeSequence) {
                 remainingTime += self.extendTimeSequence;
             }
         }
 
-        return uint256(block.timestamp) + remainingTime;
+        return remainingTime;
         // return self.endTime - uint256(block.timestamp);
     }
 

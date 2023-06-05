@@ -1,4 +1,3 @@
----
 title: Tranche Sequence
 description: A tranche sequence refers to a series of payment opportunities that occur at specified time intervals.
 

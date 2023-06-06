@@ -22,11 +22,11 @@ The following properties make tranche sequences an effective tool for managing m
 
 ### Features
 
-Flexible Time Units: The library allows you to define time in various units: minutes, hours, days, and weeks. This enables flexibility when dealing with different time periods.
+Flexible Time Units: The library allows you to define time in various units: minutes, hours, days, and weeks. This enables flexibility when dealing with different periods.
 
-Customizable Tranches: The library is built around the concept of tranches, or blocks of time, that can be used to represent milestones. These tranches can be initialized according to your needs.
+Customizable Tranches: The library is built around tranches or blocks of time that can be used to represent milestones. These tranches can be initialized according to your needs.
 
-Dynamic Time Sequencing: It enables dynamic time sequencing. The time sequence can be increased based on the existing sequence in the smart contract.
+Dynamic Time Sequencing: It enables dynamic time sequencing. The time sequence can be increased based on the existing series in the smart contract.
 
 Rest Time Inclusion: The library includes a feature for a rest time on the sequence. This offers flexibility for stakeholders, allowing for pauses or intervals between different time sequences.
 
@@ -38,13 +38,14 @@ Milestone Tracking: The library provides utilities to track milestones and under
 
 Timestamp Reporting: The library provides utilities for reporting missed timestamps, getting the start and end times of the current milestone, and listing all missing timestamps since the last completed milestone.
 
-Force Increase of Milestones: If needed, milestones can be forcibly advanced manually, regardless of whether they're currently extendable or not.
+Force Increase of Milestones: If needed, milestones can be forcibly advanced manually, regardless of whether they're currently extendable.
 
-Start Time Customization: The library allows the initialization of milestones with a custom start time instead of the current block timestamp, which can be useful for certain project timelines.
+Start Time Customization: The library allows the initialization of milestones with a custom start time instead of the current block timestamp, which can be helpful for specific project timelines.
 
 Effective Milestone Management: Functions such as resetMileStone, isCurrentMilestone, isMilestoneStarted, and isMilestoneExpired provide the ability to effectively manage milestones, including initiating, resetting, tracking, and identifying the completion of a milestone.
 
 Precision and Accuracy: The library uses block.timestamp for timekeeping, which ensures precise and accurate timestamps for all operations. This accuracy is essential for a fair and accurate representation of project progress.
+
 
 ### Tech
 
@@ -242,16 +243,33 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ```
 
-## Rationale
+## Backwards Compatibility
+No backward compatibility issues found. Thus, the library is designed with high compatibility while aligning with existing contracts' structures and logic, so its design allows for usage in diverse contexts.
 
-Backwards Compatibility
-No backward compatibility issues found.
-
-The composable extension is OPTIONAL for this library.
 
 ## Reference
 
 Crowdfunding with Periodic Milestone Payments Using a Smart Contract to Implement Fair E-Voting
+
+
+## Security Considerations
+
+Considering the security considerations when using this library, you can mitigate potential risks and ensure a secure deployment:
+
+Accurate Timekeeping: As the library relies heavily on timestamps for operation, accurate timekeeping is paramount. The blockchain's block.timestamp is used, which provides an accurate and secure time reference. However, it's still crucial to understand that validators could have a small discretion over its exact value.
+Solidity Overflow and Underflow: The library must ensure that it correctly handles overflow and underflow conditions that might occur during arithmetic operations. This is particularly relevant during timestamp and tranche calculations.
+
+Smart Contract Permissions: It's crucial to control who can call functions that modify the state of the library, such as extending time sequences, resetting milestones, etc. These functions should be restricted to avoid misuse by unauthorized entities.
+
+Reentrancy Attacks: While the library functions provided in the given code snippet are not prone to reentrancy attacks, it's still important to consider this when further developing the library or integrating it with other contracts.
+
+Testing and Auditing: Any developed smart contracts using this library should be thoroughly tested and audited to ensure no vulnerabilities could be exploited. This should include both automated testing and manual code review.
+
+Gas Optimization: Functions should be optimized to consume as little gas as possible, reducing the cost for users and mitigating the possibility of transactions failing due to exceeding gas limits.
+
+
+The provided functions in the library involve looping structures (```listMissingTimestamps```) but aren't expected to cause a DoS vulnerability based on how it's implemented. However, as a best practice, developers should always be mindful of potential DoS situations in the broader context when designing and implementing smart contracts.
+
 
 ## License
 

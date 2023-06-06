@@ -1,3 +1,4 @@
+---
 title: Tranche Sequence
 description: A tranche sequence refers to a series of payment opportunities that occur at specified time intervals.
 
@@ -53,7 +54,110 @@ Precision and Accuracy: The library uses block.timestamp for timekeeping, which 
 
 ## Specification
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in RFC 2119 and RFC 8174.
+Library
+
+NOTE:
+
+The following specifications use syntax from Solidity 0.7.0 (or above).
+
+initTranches
+
+Initializes the tranches with a sequence of timestamps.
+
+```js 
+function initTranches(uint256[] memory _sequence) public 
+```
+
+addTranche
+Adds a new tranche to the sequence.
+
+```js
+function addTranche(uint256 _timestamp) public returns (bool success)
+
+```
+
+extendTranche
+Extends the time of a particular tranche.
+
+```js
+function extendTranche(uint256 _index, uint256 _additionalTime) public returns (bool success)
+```
+
+listMissingTimestamps
+
+Lists all the missing timestamps from the last completed milestone.
+
+```js
+function listMissingTimestamps() public view returns (uint256[] memory)
+```
+
+nextMilestone
+Returns the timestamp of the next milestone.
+
+```js
+function nextMilestone() public view returns (uint256)
+```
+
+isCurrentMilestone
+Checks if the current timestamp is within a milestone.
+
+```js
+function isCurrentMilestone(uint256 _timestamp) public view returns (bool)
+```
+
+isMilestoneStarted
+Checks if a milestone has started.
+
+```js 
+function isMilestoneStarted(uint256 _index) public view returns (bool)
+```
+
+isMilestoneExpired
+
+Checks if a milestone has expired.
+
+```js
+function isMilestoneExpired(uint256 _index) public view returns (bool)
+
+```
+forceMilestone
+Forcibly advance to the next milestone.
+
+```js
+function forceMilestone(uint256 _index) public 
+```
+
+
+### Events
+
+TrancheAdded
+MUST trigger when a new tranche is added.
+
+```js
+event TrancheAdded(uint256 _timestamp)
+```
+
+TrancheExtended
+MUST trigger when a tranche is extended.
+
+
+```js
+event TrancheExtended(uint256 _index, uint256 _additionalTime)
+
+```
+
+MilestoneForced
+MUST trigger when a milestone is forcibly advanced.
+
+```js
+event MilestoneForced(uint256 _index)
+
+```
+
+
+
+
+
 
 ## Test Cases
 

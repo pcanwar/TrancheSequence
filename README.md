@@ -155,10 +155,6 @@ event MilestoneForced(uint256 _index)
 ```
 
 
-
-
-
-
 ## Test Cases
 
 The test cases presented in the src directory.

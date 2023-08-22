@@ -189,10 +189,14 @@ The library provides replay protection and ensures security by enforcing time bo
 
 Copyright and related rights waived via [CC0][d1].
 
+
+## Reference
+
+Crowdfunding with Periodic Milestone Payments Using a Smart Contract to Implement Fair E-Voting
 ## Citation
 
 Please cite this document as:
 
-Anwar Alruwaili @pcanwar <ipcanw@gmail.com>, Shaun Cole @secole1, "ERC-7169: Tranche Sequence," Ethereum Improvement Proposals, no. 7169, May 2023. [Online serial]. Available: https://eips.ethereum.org/EIPS/eip-7169.
+Anwar Alruwaili @pcanwar <ipcanw@gmail.com>, Shaun Cole @secole1, "ERC-7169: Tranche Sequence," Ethereum Improvement Proposals, no. 7169, May 2023. [Online serial]. Available: [ERC-7169](https://github.com/pcanwar/TrancheSequence/blob/main/README.md)
 
 [d1]: https://eips.ethereum.org/LICENSE

@@ -4,8 +4,7 @@ pragma solidity ^0.8.13;
 import "./TrancheSequence.sol";
 
 /**
- * @title Example
- * @author Anwar (@pcanw)
+ * @title
  *
  * @dev
  *

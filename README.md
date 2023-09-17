@@ -2,7 +2,7 @@
 eip: 7169
 title: Tranche Sequence
 description: A tranche sequence refers to a series of payment opportunities that occur at specified time intervals.
-author: Anwar Alruwaili @pcanwar <ipcanw@gmail.com>, Shaun Cole @secole1
+author: Anwar Alruwaili @pcanwar <ipcanw@gmail.com>, Shaun Cole @secole1, Michelle Conroy @missmshel
 discussions-to: https://github.com/pcanwar/TrancheSequence
 status: Draft
 type: Standards Track
